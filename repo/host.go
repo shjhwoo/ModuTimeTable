@@ -30,7 +30,7 @@ func InsertHost(entity model.Host) (int64, error) {
 }
 
 func UpdateHost(entity model.Host) error {
-	columns, values := GetInsertColumnsAndValues(entity)
+	columns, values := GetUpdateColumnsAndValues(entity)
 
 	query := fmt.Sprintf(`UPDATE %s SET %s WHERE HostId = ?`,
 		Host,

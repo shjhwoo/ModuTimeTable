@@ -10,6 +10,22 @@ type Host struct {
 	Discard     *int    `form:"discard" json:"discard" db:"Discard"`
 }
 
+type RoomFilter struct {
+	UserIdList       []*int64 `form:"userId" json:"userIdList"`                 //특정 유저 아이디들
+	RoomIdList       []*int64 `form:"roomId" json:"roomIdList"`                 //특정 룸 아이디들
+	HostIdList       []*int64 `form:"hostId" json:"hostIdList"`                 //특정 호스트 아이디들
+	GroupIdList      []*int64 `form:"groupId" json:"groupIdList"`               //특정 룸 그룹 아이디들
+	DayOfWeekStart   *int     `form:"dayOfWeekStart" json:"dayOfWeekStart"`     //예약 가능 요일 시작
+	DayOfWeekEnd     *int     `form:"dayOfWeekEnd" json:"dayOfWeekEnd"`         //예약 가능 요일 끝
+	StartTime        *string  `form:"startTime" json:"startTime"`               //예약 가능 시작 시간
+	EndTime          *string  `form:"endTime" json:"endTime"`                   //예약 가능 끝 시간
+	HostNameLike     *string  `form:"hostNameLike" json:"hostNameLike"`         //호스트 이름. 예: xx음악학원, oo연습실 등
+	GroupNameLike    *string  `form:"groupNameLike" json:"groupNameLike"`       //지점 이름
+	RoomNameLike     *string  `form:"roomNameLike" json:"roomNameLike"`         //연습실 이름
+	AddressLike      *string  `form:"addressLike" json:"addressLike"`           //주소
+	OccupationStatus *int     `form:"occupationStatus" json:"occupationStatus"` //0:빈방, 1:예약불가
+}
+
 type RoomGroup struct {
 	Id        *int64  `form:"id" json:"id" db:"Id"`
 	GroupName *string `form:"groupName" json:"groupName" db:"GroupName"`
@@ -20,13 +36,13 @@ type RoomGroup struct {
 }
 
 type RoomDetail struct {
-	Room                     Room                     `json:"room"`
-	BookingExceptionPolicies []BookingExceptionPolicy `json:"bookingExceptionPolicies"`
-	BookingPolicies          []BookingPolicy          `json:"bookingPolicies"`
+	Room               Room                `json:"room"`
+	TimeSlotExceptions []TimeSlotException `json:"timeSlotExceptions"`
+	TimeSlots          []TimeSlot          `json:"timeSlots"`
 }
 
 type Room struct {
-	RoomId   *int64  `form:"id" json:"id" db:"Id"`
+	Id       *int64  `form:"id" json:"id" db:"Id"`
 	GroupId  *int64  `form:"groupId" json:"groupId" db:"GroupId"`
 	RoomName *string `form:"roomName" json:"roomName" db:"RoomName"`
 	Discard  *int    `form:"discard" json:"discard" db:"Discard"`
@@ -45,10 +61,11 @@ type Reservation struct {
 	CancelReason    *int   `form:"cancelReason" json:"cancelReason" db:"CancelReason"`
 }
 
-type BookingExceptionPolicy struct {
+type TimeSlotException struct {
 	Id         *int64  `form:"id" json:"id" db:"Id"`
 	RoomId     *int64  `form:"roomId" json:"roomId" db:"RoomId"`
 	Date       *string `form:"date" json:"date" db:"Date"`
+	DayOfWeek  *int    `form:"dayOfWeek" json:"dayOfWeek" db:"DayOfWeek"`
 	StartTime  *string `form:"startTime" json:"startTime" db:"StartTime"`
 	EndTime    *string `form:"endTime" json:"endTime" db:"EndTime"`
 	Reason     *int    `form:"reason" json:"reason" db:"Reason"`
@@ -56,7 +73,18 @@ type BookingExceptionPolicy struct {
 	Discard    *int    `form:"discard" json:"discard" db:"Discard"`
 }
 
-type BookingPolicy struct {
+type TimeSlotsDetail struct {
+	DayOfWeek *int    `form:"dayOfWeek" json:"dayOfWeek" db:"DayOfWeek"`
+	StartTime *string `form:"startTime" json:"startTime" db:"StartTime"`
+	EndTime   *string `form:"endTime" json:"endTime" db:"EndTime"`
+	RoomId    *int64  `form:"roomId" json:"roomId" db:"RoomId"`
+	RoomName  *string `form:"roomName" json:"roomName" db:"RoomName"`
+	GroupId   *int64  `form:"groupId" json:"groupId" db:"GroupId"`
+	GroupName *string `form:"groupName" json:"groupName" db:"GroupName"`
+	Address   *string `form:"address" json:"address" db:"Address"`
+}
+
+type TimeSlot struct {
 	Id        *int64  `form:"id" json:"id" db:"Id"`
 	RoomId    *int64  `form:"roomId" json:"roomId" db:"RoomId"`
 	DayOfWeek *int    `form:"dayOfWeek" json:"dayOfWeek" db:"DayOfWeek"`

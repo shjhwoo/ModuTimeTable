@@ -48,14 +48,12 @@ func GetInsertColumnsAndValues(entity any) ([]string, []any) {
 	return columns, values
 }
 
-func GetUpdateColumnsAndValues(tableName string, entity any) ([]string, []any) {
+func GetUpdateColumnsAndValues(entity any) ([]string, []any) {
 	e := reflect.ValueOf(entity)
 
 	if e.Kind() == reflect.Ptr {
 		e = e.Elem()
 	}
-
-	var primaryColumnName = fmt.Sprintf("%sId", tableName)
 
 	var columns []string
 	var values []any
@@ -65,7 +63,7 @@ func GetUpdateColumnsAndValues(tableName string, entity any) ([]string, []any) {
 		if !f.IsZero() {
 			sf := e.Type().Field(i)
 			column := sf.Tag.Get("db")
-			if column == "" || column == primaryColumnName {
+			if column == "" || column == "Id" {
 				continue
 			}
 

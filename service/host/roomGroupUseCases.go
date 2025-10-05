@@ -50,6 +50,22 @@ func DeleteRoomGroups(c *gin.Context) {
 			c.JSON(500, gin.H{"error": "failed to delete roomGroup: " + err.Error()})
 			return
 		}
+
+		// rooms, err := repo.GetRooms(model.Room{GroupId: &id})
+		// if err != nil {
+		// 	c.JSON(500, gin.H{"error": "failed to get rooms: " + err.Error()})
+		// 	return
+		// }
+
+		// var roomIds []int64
+		// for _, room := range rooms {
+		// 	if room.RoomId != nil {
+		// 		roomIds = append(roomIds, *room.RoomId)
+		// 	}
+		// }
+
+		// if len(roomIds) > 0 {
+		// }
 	}
 
 	c.JSON(200, nil)

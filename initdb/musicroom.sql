@@ -99,8 +99,8 @@ DELETE FROM `Room`;
 /*!40000 ALTER TABLE `Room` DISABLE KEYS */;
 /*!40000 ALTER TABLE `Room` ENABLE KEYS */;
 
--- 테이블 MusicRoom.BookingExceptionPolicy 구조 내보내기
-CREATE TABLE IF NOT EXISTS `BookingExceptionPolicy` (
+-- 테이블 MusicRoom.TimeSlotException 구조 내보내기
+CREATE TABLE IF NOT EXISTS `TimeSlotException` (
   `Id` bigint NOT NULL AUTO_INCREMENT,
   `RoomId` bigint NOT NULL DEFAULT '0',
   `Date` varchar(8) NOT NULL DEFAULT '',
@@ -116,13 +116,13 @@ CREATE TABLE IF NOT EXISTS `BookingExceptionPolicy` (
   KEY `EndTime` (`EndTime`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
 
--- 테이블 데이터 MusicRoom.BookingExceptionPolicy:~0 rows (대략적) 내보내기
-DELETE FROM `BookingExceptionPolicy`;
-/*!40000 ALTER TABLE `BookingExceptionPolicy` DISABLE KEYS */;
-/*!40000 ALTER TABLE `BookingExceptionPolicy` ENABLE KEYS */;
+-- 테이블 데이터 MusicRoom.TimeSlotException:~0 rows (대략적) 내보내기
+DELETE FROM `TimeSlotException`;
+/*!40000 ALTER TABLE `TimeSlotException` DISABLE KEYS */;
+/*!40000 ALTER TABLE `TimeSlotException` ENABLE KEYS */;
 
--- 테이블 MusicRoom.BookingPolicy 구조 내보내기
-CREATE TABLE IF NOT EXISTS `BookingPolicy` (
+-- 테이블 MusicRoom.TimeSlot 구조 내보내기
+CREATE TABLE IF NOT EXISTS `TimeSlot` (
   `Id` bigint unsigned NOT NULL AUTO_INCREMENT,
   `RoomId` bigint unsigned NOT NULL DEFAULT '0',
   `DayOfWeek` tinyint unsigned NOT NULL DEFAULT '0',
@@ -136,10 +136,10 @@ CREATE TABLE IF NOT EXISTS `BookingPolicy` (
   KEY `EndTime` (`EndTime`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COMMENT='연습실 시간표 기본 정책 테이블';
 
--- 테이블 데이터 MusicRoom.BookingPolicy:~0 rows (대략적) 내보내기
-DELETE FROM `BookingPolicy`;
-/*!40000 ALTER TABLE `BookingPolicy` DISABLE KEYS */;
-/*!40000 ALTER TABLE `BookingPolicy` ENABLE KEYS */;
+-- 테이블 데이터 MusicRoom.TimeSlot:~0 rows (대략적) 내보내기
+DELETE FROM `TimeSlot`;
+/*!40000 ALTER TABLE `TimeSlot` DISABLE KEYS */;
+/*!40000 ALTER TABLE `TimeSlot` ENABLE KEYS */;
 
 -- 테이블 MusicRoom.User 구조 내보내기
 CREATE TABLE IF NOT EXISTS `User` (

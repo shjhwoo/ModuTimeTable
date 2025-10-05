@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-func InsertBookingPolicy(entity model.BookingPolicy) (int64, error) {
+func InsertTimeSlot(entity model.TimeSlot) (int64, error) {
 	columns, values := GetInsertColumnsAndValues(entity)
 
 	query := fmt.Sprintf(`INSERT INTO %s (%s) VALUES %s`,
@@ -28,7 +28,25 @@ func InsertBookingPolicy(entity model.BookingPolicy) (int64, error) {
 	return id, nil
 }
 
-func InsertBookingExceptionPolicy(entity model.BookingExceptionPolicy) (int64, error) {
+func UpdateTimeSlot(entity model.TimeSlot) error {
+	columns, values := GetUpdateColumnsAndValues(entity)
+
+	query := fmt.Sprintf(`UPDATE %s SET %s WHERE Id = ?`,
+		TimeSlot,
+		strings.Join(columns, ", "),
+	)
+
+	queryParams := append(values, entity.Id)
+
+	_, err := DB.Exec(query, queryParams...)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func InsertTimeSlotException(entity model.TimeSlotException) (int64, error) {
 	columns, values := GetInsertColumnsAndValues(entity)
 
 	query := fmt.Sprintf(`INSERT INTO %s (%s) VALUES %s`,
