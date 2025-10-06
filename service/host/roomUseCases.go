@@ -30,15 +30,6 @@ func CreateRoomAndTimeSlots(c *gin.Context) {
 		}
 	}
 
-	for _, exceptionPolicy := range body.TimeSlotExceptions {
-		exceptionPolicy.RoomId = &roomId
-		_, err := repo.InsertTimeSlotException(exceptionPolicy)
-		if err != nil {
-			c.JSON(500, gin.H{"error": "failed to create booking exception policy: " + err.Error()})
-			return
-		}
-	}
-
 	c.JSON(201, gin.H{"data": gin.H{"id": roomId}})
 }
 
@@ -55,11 +46,10 @@ func UpdateRoomAndTimeSlots(c *gin.Context) {
 		return
 	}
 
-	for _, policy := range body.TimeSlots {
-		policy.RoomId = body.Room.Id
-		_, err := repo.InsertTimeSlot(policy)
+	for _, slot := range body.TimeSlots {
+		err := repo.UpdateTimeSlot(slot)
 		if err != nil {
-			c.JSON(500, gin.H{"error": "failed to create booking policy: " + err.Error()})
+			c.JSON(500, gin.H{"error": "failed to update timeSlot: " + err.Error()})
 			return
 		}
 	}
@@ -67,27 +57,27 @@ func UpdateRoomAndTimeSlots(c *gin.Context) {
 	c.JSON(200, nil)
 }
 
-func CreateRoomTimeSlotExceptions(c *gin.Context) {
-	var body []model.TimeSlotException
-	if err := c.ShouldBindJSON(&body); err != nil {
-		c.JSON(400, gin.H{"error": "invalid request body: " + err.Error()})
+func DeleteRoomAndTimeSlots(c *gin.Context) {
+	id := util.ParseInt64(c.Query("id"))
+
+	err := repo.DeleteRoom(id)
+	if err != nil {
+		c.JSON(500, gin.H{"error": "failed to delete room: " + err.Error()})
 		return
 	}
 
-	for _, timeSlotException := range body {
-		_, err := repo.InsertTimeSlotException(timeSlotException)
-		if err != nil {
-			c.JSON(500, gin.H{"error": "failed to create time slot exception: " + err.Error()})
-			return
-		}
+	if err := repo.DeleteTimeSlotByRoomId(id); err != nil {
+		c.JSON(500, gin.H{"error": "failed to delete time slots: " + err.Error()})
+		return
 	}
 
-	c.JSON(201, nil)
+	if err := repo.DeleteTimeSlotExceptionByRoomId(id); err != nil {
+		c.JSON(500, gin.H{"error": "failed to delete time slot exceptions: " + err.Error()})
+		return
+	}
+
+	c.JSON(200, nil)
 }
-
-func UpdateRoomTimeSlotExceptions(c *gin.Context) {}
-
-func DeleteRoomsAndTimeSlots(c *gin.Context) {}
 
 func GetHostRooms(c *gin.Context) {
 	var query model.RoomFilter

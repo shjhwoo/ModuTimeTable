@@ -101,6 +101,14 @@ var Friday = 4
 var Saturday = 5
 var Sunday = 6
 
+type TimeSlotFilter struct {
+	StartDateTime *string  `form:"startDateTime" json:"startDateTime"`
+	EndDateTime   *string  `form:"endDateTime" json:"endDateTime"`
+	HostIdList    []*int64 `form:"hostId" json:"hostIdList"`   //특정 호스트 아이디들
+	GroupIdList   []*int64 `form:"groupId" json:"groupIdList"` //특정 룸 그룹 아이디들
+	RoomIdList    []*int64 `form:"roomId" json:"roomIdList"`   //특정 룸 아이디들
+}
+
 type User struct {
 	UserId       *int64  `form:"id" json:"id" db:"Id"`
 	UserName     *string `form:"userName" json:"userName" db:"UserName"`

@@ -46,6 +46,17 @@ func UpdateTimeSlot(entity model.TimeSlot) error {
 	return nil
 }
 
+func DeleteTimeSlotByRoomId(roomId int64) error {
+	query := fmt.Sprintf(`UPDATE %s SET Discard = 1 WHERE RoomId = ?`, TimeSlot)
+
+	_, err := DB.Exec(query, roomId)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func InsertTimeSlotException(entity model.TimeSlotException) (int64, error) {
 	columns, values := GetInsertColumnsAndValues(entity)
 
@@ -66,4 +77,44 @@ func InsertTimeSlotException(entity model.TimeSlotException) (int64, error) {
 	}
 
 	return id, nil
+}
+
+func UpdateTimeSlotException(entity model.TimeSlotException) error {
+	columns, values := GetUpdateColumnsAndValues(entity)
+
+	query := fmt.Sprintf(`UPDATE %s SET %s WHERE Id = ?`,
+		TimeSlot,
+		strings.Join(columns, ", "),
+	)
+
+	queryParams := append(values, entity.Id)
+
+	_, err := DB.Exec(query, queryParams...)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func DeleteTimeSlotException(id int64) error {
+	query := fmt.Sprintf(`UPDATE %s SET Discard = 1 WHERE Id = ?`, TimeSlotException)
+
+	_, err := DB.Exec(query, id)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func DeleteTimeSlotExceptionByRoomId(roomId int64) error {
+	query := fmt.Sprintf(`UPDATE %s SET Discard = 1 WHERE RoomId = ?`, TimeSlotException)
+
+	_, err := DB.Exec(query, roomId)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

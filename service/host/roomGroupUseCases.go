@@ -40,32 +40,40 @@ func UpdateRoomGroup(c *gin.Context) {
 	c.JSON(200, nil)
 }
 
-func DeleteRoomGroups(c *gin.Context) {
-	idList := c.QueryArray("id")
-	for _, idStr := range idList {
+func DeleteRoomGroup(c *gin.Context) {
 
-		id := util.ParseInt64(idStr)
+	id := util.ParseInt64(c.Query("id"))
 
-		if err := repo.DeleteRoomGroup(id); err != nil {
-			c.JSON(500, gin.H{"error": "failed to delete roomGroup: " + err.Error()})
+	if err := repo.DeleteRoomGroup(id); err != nil {
+		c.JSON(500, gin.H{"error": "failed to delete roomGroup: " + err.Error()})
+		return
+	}
+
+	rooms, err := repo.GetHostRooms(model.RoomFilter{GroupIdList: []*int64{&id}})
+	if err != nil {
+		c.JSON(500, gin.H{"error": "failed to get rooms: " + err.Error()})
+		return
+	}
+
+	for _, room := range rooms {
+
+		roomId := *room.Room.Id
+
+		if err := repo.DeleteRoom(roomId); err != nil {
+			c.JSON(500, gin.H{"error": "failed to delete room: " + err.Error()})
 			return
 		}
 
-		// rooms, err := repo.GetRooms(model.Room{GroupId: &id})
-		// if err != nil {
-		// 	c.JSON(500, gin.H{"error": "failed to get rooms: " + err.Error()})
-		// 	return
-		// }
+		if err := repo.DeleteTimeSlotByRoomId(roomId); err != nil {
+			c.JSON(500, gin.H{"error": "failed to delete time slots: " + err.Error()})
+			return
+		}
 
-		// var roomIds []int64
-		// for _, room := range rooms {
-		// 	if room.RoomId != nil {
-		// 		roomIds = append(roomIds, *room.RoomId)
-		// 	}
-		// }
+		if err := repo.DeleteTimeSlotExceptionByRoomId(roomId); err != nil {
+			c.JSON(500, gin.H{"error": "failed to delete time slot exceptions: " + err.Error()})
+			return
+		}
 
-		// if len(roomIds) > 0 {
-		// }
 	}
 
 	c.JSON(200, nil)

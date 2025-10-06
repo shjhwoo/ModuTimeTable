@@ -46,6 +46,17 @@ func UpdateRoom(entity model.Room) error {
 	return nil
 }
 
+func DeleteRoom(id int64) error {
+	query := fmt.Sprintf(`UPDATE %s SET Discard = 1 WHERE Id = ?`, Room)
+
+	_, err := DB.Exec(query, id)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func buildHostRoomWhereCondtions(filter model.RoomFilter) ([]string, []any) {
 	var whereCondiions []string
 	var params []any

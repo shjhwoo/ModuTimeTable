@@ -1,0 +1,15 @@
+{
+  "servers": {
+    "docker-hub": {
+      "command": "node",
+      "args": [
+        "C:/Users/samsung/Desktop/hub-mcp/dist/index.js",
+        "--transport=stdio",
+        "--username=suehyun037"
+      ],
+      "env": {
+        "HUB_PAT_TOKEN": "dckr_pat_Njpjhw9NohZ3VF1_rUzbDJEWKbs"
+      }
+    }
+  }
+}
