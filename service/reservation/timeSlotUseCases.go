@@ -2,6 +2,7 @@ package reservation
 
 import (
 	"musicRoomBookingbot/model"
+	"musicRoomBookingbot/repo"
 	"musicRoomBookingbot/util"
 
 	"github.com/gin-gonic/gin"
@@ -20,9 +21,11 @@ func GetTimeSlotsByDate(c *gin.Context) {
 	query.GroupIdList = util.ParseQueryArrayToInt64List(c.QueryArray("groupId"))
 	query.RoomIdList = util.ParseQueryArrayToInt64List(c.QueryArray("roomId"))
 
-	//
+	repo.GetAvailableTimeSlotsByDate(query)
+
 }
 
+// 공간을 기준으로 정렬: 그 하위에 시간대별 예약 관련 정보를 담아서 정리.
 func GetTimeSlots(c *gin.Context) {}
 
 func CreateReservation(c *gin.Context) {}

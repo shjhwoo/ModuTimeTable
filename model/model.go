@@ -1,6 +1,11 @@
 package model
 
-//네이버나 카카오 OAuth 로그인
+import (
+	"musicRoomBookingbot/util"
+	"time"
+)
+
+// 네이버나 카카오 OAuth 로그인
 type Host struct {
 	Id          *int64  `form:"id" json:"id" db:"Id"`
 	HostName    *string `form:"hostName" json:"hostName" db:"HostName"`
@@ -42,10 +47,12 @@ type RoomDetail struct {
 }
 
 type Room struct {
-	Id       *int64  `form:"id" json:"id" db:"Id"`
-	GroupId  *int64  `form:"groupId" json:"groupId" db:"GroupId"`
-	RoomName *string `form:"roomName" json:"roomName" db:"RoomName"`
-	Discard  *int    `form:"discard" json:"discard" db:"Discard"`
+	Id                      *int64  `form:"id" json:"id" db:"Id"`
+	GroupId                 *int64  `form:"groupId" json:"groupId" db:"GroupId"`
+	RoomName                *string `form:"roomName" json:"roomName" db:"RoomName"`
+	Discard                 *int    `form:"discard" json:"discard" db:"Discard"`
+	ReservableDaysMinOffset *int    `form:"reservableDaysMinOffset" json:"reservableDaysMinOffset" db:"reservableDaysMinOffset"`
+	ReservableDaysMaxOffset *int    `form:"reservableDaysMaxOffset" json:"reservableDaysMaxOffset" db:"reservableDaysMaxOffset"`
 }
 
 type Reservation struct {
@@ -102,11 +109,31 @@ var Saturday = 5
 var Sunday = 6
 
 type TimeSlotFilter struct {
-	StartDateTime *string  `form:"startDateTime" json:"startDateTime"`
-	EndDateTime   *string  `form:"endDateTime" json:"endDateTime"`
-	HostIdList    []*int64 `form:"hostId" json:"hostIdList"`   //특정 호스트 아이디들
-	GroupIdList   []*int64 `form:"groupId" json:"groupIdList"` //특정 룸 그룹 아이디들
-	RoomIdList    []*int64 `form:"roomId" json:"roomIdList"`   //특정 룸 아이디들
+	StartDateTime       *string `form:"startDateTime" json:"startDateTime"`
+	StartDateTimeParsed time.Time
+	EndDateTime         *string `form:"endDateTime" json:"endDateTime"`
+	EndDateTimeParsed   time.Time
+	HostIdList          []*int64 `form:"hostId" json:"hostIdList"`   //특정 호스트 아이디들
+	GroupIdList         []*int64 `form:"groupId" json:"groupIdList"` //특정 룸 그룹 아이디들
+	RoomIdList          []*int64 `form:"roomId" json:"roomIdList"`   //특정 룸 아이디들
+}
+
+func (tf *TimeSlotFilter) ParseTime() error {
+	currentTime := util.GetCurrentTime()
+
+	tf.StartDateTimeParsed = currentTime
+
+	if util.SafeStr(tf.StartDateTime) == "" {
+		tf.StartDateTime = util.StringPtr(currentTime.Format(util.YYYYMMDDhhmmss))
+	}
+
+	endDateTimeParsed, err := time.Parse(util.YYYYMMDDhhmmss, util.SafeStr(tf.EndDateTime))
+	if err != nil {
+		return err
+	}
+	tf.EndDateTimeParsed = endDateTimeParsed
+
+	return nil
 }
 
 type User struct {

@@ -89,6 +89,8 @@ CREATE TABLE IF NOT EXISTS `Room` (
   `GroupId` bigint unsigned NOT NULL DEFAULT '0',
   `RoomName` varchar(50) NOT NULL DEFAULT '',
   `Discard` tinyint unsigned NOT NULL DEFAULT '0',
+  `ReservableDaysMinOffset` tinyint unsigned NOT NULL DEFAULT '0',
+  `ReservableDaysMaxOffset` tinyint unsigned NOT NULL DEFAULT '14',
   PRIMARY KEY (`Id`),
   KEY `RoomName` (`RoomName`),
   KEY `GroupId` (`GroupId`)
