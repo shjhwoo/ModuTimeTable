@@ -91,6 +91,7 @@ CREATE TABLE IF NOT EXISTS `Room` (
   `Discard` tinyint unsigned NOT NULL DEFAULT '0',
   `ReservableDaysMinOffset` tinyint unsigned NOT NULL DEFAULT '0',
   `ReservableDaysMaxOffset` tinyint unsigned NOT NULL DEFAULT '14',
+  `ReservationUnitMinutes` tinyint unsigned NOT NULL DEFAULT '0',
   PRIMARY KEY (`Id`),
   KEY `RoomName` (`RoomName`),
   KEY `GroupId` (`GroupId`)

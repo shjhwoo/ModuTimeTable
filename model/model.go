@@ -51,8 +51,9 @@ type Room struct {
 	GroupId                 *int64  `form:"groupId" json:"groupId" db:"GroupId"`
 	RoomName                *string `form:"roomName" json:"roomName" db:"RoomName"`
 	Discard                 *int    `form:"discard" json:"discard" db:"Discard"`
-	ReservableDaysMinOffset *int    `form:"reservableDaysMinOffset" json:"reservableDaysMinOffset" db:"reservableDaysMinOffset"`
-	ReservableDaysMaxOffset *int    `form:"reservableDaysMaxOffset" json:"reservableDaysMaxOffset" db:"reservableDaysMaxOffset"`
+	ReservableDaysMinOffset *int    `form:"reservableDaysMinOffset" json:"reservableDaysMinOffset" db:"ReservableDaysMinOffset"`
+	ReservableDaysMaxOffset *int    `form:"reservableDaysMaxOffset" json:"reservableDaysMaxOffset" db:"ReservableDaysMaxOffset"`
+	ReservationUnitMinutes  *int    `form:"reservationUnitMinutes" json:"reservationUnitMinutes" db:"ReservationUnitMinutes"`
 }
 
 type Reservation struct {
@@ -81,14 +82,16 @@ type TimeSlotException struct {
 }
 
 type TimeSlotsDetail struct {
-	DayOfWeek *int    `form:"dayOfWeek" json:"dayOfWeek" db:"DayOfWeek"`
-	StartTime *string `form:"startTime" json:"startTime" db:"StartTime"`
-	EndTime   *string `form:"endTime" json:"endTime" db:"EndTime"`
-	RoomId    *int64  `form:"roomId" json:"roomId" db:"RoomId"`
-	RoomName  *string `form:"roomName" json:"roomName" db:"RoomName"`
-	GroupId   *int64  `form:"groupId" json:"groupId" db:"GroupId"`
-	GroupName *string `form:"groupName" json:"groupName" db:"GroupName"`
-	Address   *string `form:"address" json:"address" db:"Address"`
+	Id                     *int64  `form:"id" json:"id" db:"Id"`
+	StartTime              *string `form:"startTime" json:"startTime" db:"StartTime"`
+	EndTime                *string `form:"endTime" json:"endTime" db:"EndTime"`
+	DayOfWeek              *int    `form:"dayOfWeek" json:"dayOfWeek" db:"DayOfWeek"`
+	RoomId                 *int64  `form:"roomId" json:"roomId" db:"RoomId"`
+	RoomName               *string `form:"roomName" json:"roomName" db:"RoomName"`
+	ReservationUnitMinutes *int    `form:"reservationUnitMinutes" json:"reservationUnitMinutes" db:"ReservationUnitMinutes"`
+	GroupId                *int64  `form:"groupId" json:"groupId" db:"GroupId"`
+	GroupName              *string `form:"groupName" json:"groupName" db:"GroupName"`
+	Address                *string `form:"address" json:"address" db:"Address"`
 }
 
 type TimeSlot struct {
@@ -107,6 +110,13 @@ var Thursday = 3
 var Friday = 4
 var Saturday = 5
 var Sunday = 6
+
+type SplittedTimeSlot struct {
+	StartTimeParsed time.Time
+	StartTime       *string `form:"startTime" json:"startTime"`
+	EndTimeParsed   time.Time
+	EndTime         *string `form:"endTime" json:"endTime"`
+}
 
 type TimeSlotFilter struct {
 	StartDateTime       *string `form:"startDateTime" json:"startDateTime"`
