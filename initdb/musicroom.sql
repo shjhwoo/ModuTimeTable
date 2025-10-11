@@ -17,6 +17,48 @@
 CREATE DATABASE IF NOT EXISTS `MusicRoom` /*!40100 DEFAULT CHARACTER SET utf8mb3 */ /*!80016 DEFAULT ENCRYPTION='N' */;
 USE `MusicRoom`;
 
+-- 테이블 MusicRoom.DaySlot 구조 내보내기
+CREATE TABLE IF NOT EXISTS `DaySlot` (
+  `Id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `RoomId` bigint unsigned NOT NULL DEFAULT '0',
+  `DayOfWeek` tinyint unsigned NOT NULL DEFAULT '0',
+  `StartTime` varchar(4) NOT NULL DEFAULT '',
+  `EndTime` varchar(4) NOT NULL DEFAULT '',
+  `Discard` tinyint(3) unsigned zerofill NOT NULL DEFAULT '000',
+  PRIMARY KEY (`Id`),
+  KEY `열 2` (`RoomId`),
+  KEY `DayOfWeek` (`DayOfWeek`),
+  KEY `StartTime` (`StartTime`),
+  KEY `EndTime` (`EndTime`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COMMENT='연습실 시간표 기본 정책 테이블';
+
+-- 테이블 데이터 MusicRoom.DaySlot:~0 rows (대략적) 내보내기
+DELETE FROM `DaySlot`;
+/*!40000 ALTER TABLE `DaySlot` DISABLE KEYS */;
+/*!40000 ALTER TABLE `DaySlot` ENABLE KEYS */;
+
+-- 테이블 MusicRoom.DaySlotException 구조 내보내기
+CREATE TABLE IF NOT EXISTS `DaySlotException` (
+  `Id` bigint NOT NULL AUTO_INCREMENT,
+  `RoomId` bigint NOT NULL DEFAULT '0',
+  `Date` varchar(8) NOT NULL DEFAULT '',
+  `StartTime` varchar(4) NOT NULL DEFAULT '',
+  `EndTime` varchar(4) NOT NULL DEFAULT '',
+  `Reason` tinyint unsigned NOT NULL DEFAULT '0',
+  `ReasonText` tinytext CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci,
+  `Discard` tinyint unsigned NOT NULL DEFAULT '0',
+  PRIMARY KEY (`Id`),
+  KEY `RoomId` (`RoomId`),
+  KEY `StartTime` (`StartTime`),
+  KEY `Date` (`Date`),
+  KEY `EndTime` (`EndTime`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
+
+-- 테이블 데이터 MusicRoom.DaySlotException:~0 rows (대략적) 내보내기
+DELETE FROM `DaySlotException`;
+/*!40000 ALTER TABLE `DaySlotException` DISABLE KEYS */;
+/*!40000 ALTER TABLE `DaySlotException` ENABLE KEYS */;
+
 -- 테이블 MusicRoom.Host 구조 내보내기
 CREATE TABLE IF NOT EXISTS `Host` (
   `Id` bigint unsigned NOT NULL AUTO_INCREMENT,
@@ -36,26 +78,6 @@ CREATE TABLE IF NOT EXISTS `Host` (
 DELETE FROM `Host`;
 /*!40000 ALTER TABLE `Host` DISABLE KEYS */;
 /*!40000 ALTER TABLE `Host` ENABLE KEYS */;
-
--- 테이블 MusicRoom.RoomGroup 구조 내보내기
-CREATE TABLE IF NOT EXISTS `RoomGroup` (
-  `Id` bigint unsigned NOT NULL AUTO_INCREMENT,
-  `HostId` bigint unsigned NOT NULL DEFAULT '0',
-  `RoomGroupName` varchar(50) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL DEFAULT '',
-  `Address` varchar(500) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL DEFAULT '',
-  `CreatedAt` varchar(14) NOT NULL DEFAULT '',
-  `Discard` tinyint unsigned NOT NULL DEFAULT '0',
-  PRIMARY KEY (`Id`),
-  KEY `HostId` (`HostId`),
-  KEY `RoomGroupName` (`RoomGroupName`) USING BTREE,
-  KEY `Address` (`Address`) USING BTREE,
-  KEY `CreatedAt` (`CreatedAt`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 ROW_FORMAT=DYNAMIC;
-
--- 테이블 데이터 MusicRoom.RoomGroup:~0 rows (대략적) 내보내기
-DELETE FROM `RoomGroup`;
-/*!40000 ALTER TABLE `RoomGroup` DISABLE KEYS */;
-/*!40000 ALTER TABLE `RoomGroup` ENABLE KEYS */;
 
 -- 테이블 MusicRoom.Reservation 구조 내보내기
 CREATE TABLE IF NOT EXISTS `Reservation` (
@@ -88,10 +110,10 @@ CREATE TABLE IF NOT EXISTS `Room` (
   `Id` bigint unsigned NOT NULL AUTO_INCREMENT,
   `GroupId` bigint unsigned NOT NULL DEFAULT '0',
   `RoomName` varchar(50) NOT NULL DEFAULT '',
-  `Discard` tinyint unsigned NOT NULL DEFAULT '0',
   `ReservableDaysMinOffset` tinyint unsigned NOT NULL DEFAULT '0',
   `ReservableDaysMaxOffset` tinyint unsigned NOT NULL DEFAULT '14',
   `ReservationUnitMinutes` tinyint unsigned NOT NULL DEFAULT '0',
+  `Discard` tinyint unsigned NOT NULL DEFAULT '0',
   PRIMARY KEY (`Id`),
   KEY `RoomName` (`RoomName`),
   KEY `GroupId` (`GroupId`)
@@ -102,47 +124,25 @@ DELETE FROM `Room`;
 /*!40000 ALTER TABLE `Room` DISABLE KEYS */;
 /*!40000 ALTER TABLE `Room` ENABLE KEYS */;
 
--- 테이블 MusicRoom.TimeSlotException 구조 내보내기
-CREATE TABLE IF NOT EXISTS `TimeSlotException` (
-  `Id` bigint NOT NULL AUTO_INCREMENT,
-  `RoomId` bigint NOT NULL DEFAULT '0',
-  `Date` varchar(8) NOT NULL DEFAULT '',
-  `StartTime` varchar(4) NOT NULL DEFAULT '',
-  `EndTime` varchar(4) NOT NULL DEFAULT '',
-  `Reason` tinyint unsigned NOT NULL DEFAULT '0',
-  `ReasonText` tinytext CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci,
+-- 테이블 MusicRoom.RoomGroup 구조 내보내기
+CREATE TABLE IF NOT EXISTS `RoomGroup` (
+  `Id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `HostId` bigint unsigned NOT NULL DEFAULT '0',
+  `RoomGroupName` varchar(50) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL DEFAULT '',
+  `Address` varchar(500) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL DEFAULT '',
+  `CreatedAt` varchar(14) NOT NULL DEFAULT '',
   `Discard` tinyint unsigned NOT NULL DEFAULT '0',
   PRIMARY KEY (`Id`),
-  KEY `RoomId` (`RoomId`),
-  KEY `StartTime` (`StartTime`),
-  KEY `Date` (`Date`),
-  KEY `EndTime` (`EndTime`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
+  KEY `HostId` (`HostId`),
+  KEY `RoomGroupName` (`RoomGroupName`) USING BTREE,
+  KEY `Address` (`Address`) USING BTREE,
+  KEY `CreatedAt` (`CreatedAt`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 ROW_FORMAT=DYNAMIC;
 
--- 테이블 데이터 MusicRoom.TimeSlotException:~0 rows (대략적) 내보내기
-DELETE FROM `TimeSlotException`;
-/*!40000 ALTER TABLE `TimeSlotException` DISABLE KEYS */;
-/*!40000 ALTER TABLE `TimeSlotException` ENABLE KEYS */;
-
--- 테이블 MusicRoom.TimeSlot 구조 내보내기
-CREATE TABLE IF NOT EXISTS `TimeSlot` (
-  `Id` bigint unsigned NOT NULL AUTO_INCREMENT,
-  `RoomId` bigint unsigned NOT NULL DEFAULT '0',
-  `DayOfWeek` tinyint unsigned NOT NULL DEFAULT '0',
-  `StartTime` varchar(4) NOT NULL DEFAULT '',
-  `EndTime` varchar(4) NOT NULL DEFAULT '',
-  `Discard` tinyint(3) unsigned zerofill NOT NULL DEFAULT '000',
-  PRIMARY KEY (`Id`),
-  KEY `열 2` (`RoomId`),
-  KEY `DayOfWeek` (`DayOfWeek`),
-  KEY `StartTime` (`StartTime`),
-  KEY `EndTime` (`EndTime`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COMMENT='연습실 시간표 기본 정책 테이블';
-
--- 테이블 데이터 MusicRoom.TimeSlot:~0 rows (대략적) 내보내기
-DELETE FROM `TimeSlot`;
-/*!40000 ALTER TABLE `TimeSlot` DISABLE KEYS */;
-/*!40000 ALTER TABLE `TimeSlot` ENABLE KEYS */;
+-- 테이블 데이터 MusicRoom.RoomGroup:~0 rows (대략적) 내보내기
+DELETE FROM `RoomGroup`;
+/*!40000 ALTER TABLE `RoomGroup` DISABLE KEYS */;
+/*!40000 ALTER TABLE `RoomGroup` ENABLE KEYS */;
 
 -- 테이블 MusicRoom.User 구조 내보내기
 CREATE TABLE IF NOT EXISTS `User` (

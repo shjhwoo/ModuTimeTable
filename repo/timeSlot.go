@@ -34,7 +34,7 @@ func UpdateTimeSlot(entity model.TimeSlot) error {
 	columns, values := GetUpdateColumnsAndValues(entity)
 
 	query := fmt.Sprintf(`UPDATE %s SET %s WHERE Id = ?`,
-		TimeSlot,
+		DaySlot,
 		strings.Join(columns, ", "),
 	)
 
@@ -49,7 +49,7 @@ func UpdateTimeSlot(entity model.TimeSlot) error {
 }
 
 func DeleteTimeSlotByRoomId(roomId int64) error {
-	query := fmt.Sprintf(`UPDATE %s SET Discard = 1 WHERE RoomId = ?`, TimeSlot)
+	query := fmt.Sprintf(`UPDATE %s SET Discard = 1 WHERE RoomId = ?`, DaySlot)
 
 	_, err := DB.Exec(query, roomId)
 	if err != nil {
@@ -85,7 +85,7 @@ func UpdateTimeSlotException(entity model.TimeSlotException) error {
 	columns, values := GetUpdateColumnsAndValues(entity)
 
 	query := fmt.Sprintf(`UPDATE %s SET %s WHERE Id = ?`,
-		TimeSlot,
+		DaySlot,
 		strings.Join(columns, ", "),
 	)
 
@@ -100,7 +100,7 @@ func UpdateTimeSlotException(entity model.TimeSlotException) error {
 }
 
 func DeleteTimeSlotException(id int64) error {
-	query := fmt.Sprintf(`UPDATE %s SET Discard = 1 WHERE Id = ?`, TimeSlotException)
+	query := fmt.Sprintf(`UPDATE %s SET Discard = 1 WHERE Id = ?`, DaySlotException)
 
 	_, err := DB.Exec(query, id)
 	if err != nil {
@@ -111,7 +111,7 @@ func DeleteTimeSlotException(id int64) error {
 }
 
 func DeleteTimeSlotExceptionByRoomId(roomId int64) error {
-	query := fmt.Sprintf(`UPDATE %s SET Discard = 1 WHERE RoomId = ?`, TimeSlotException)
+	query := fmt.Sprintf(`UPDATE %s SET Discard = 1 WHERE RoomId = ?`, DaySlotException)
 
 	_, err := DB.Exec(query, roomId)
 	if err != nil {
@@ -122,27 +122,6 @@ func DeleteTimeSlotExceptionByRoomId(roomId int64) error {
 }
 
 func GetAvailableTimeSlotsByDate(filter model.TimeSlotFilter) ([]model.SplittedTimeSlot, error) {
-
-	if err := filter.ParseTime(); err != nil {
-		return nil, err
-	}
-
-	//일단 사용자가 지정한 날짜범위를 기준으로 한다.
-	/*
-
-			startDateTime ~ endDateTime 1시간 단위로 쪼갬
-
-			1차: 각 시간대에 쓸 수 있는 연습실 목록을 조회.
-			1-1: 연습실별 기본 시간표정보확인
-
-		//... AS RoomStatus, -- 예약가능(0), 이미 예약됨(1), 예외로 인해 예약불가(2), 예약가능일정 범위를 벗어나서 예약불가(3), 원래 예약불가(4)
-
-	*/
-
-	startYYYYMMDD := util.SafeStr(filter.StartDateTime)[:8]
-	endYYYYMMDD := util.SafeStr(filter.EndDateTime)[:8]
-
-	//filter.StartDateTimeParsed
 
 	query := `SELECT
 	ts.Id AS Id,
@@ -160,43 +139,23 @@ func GetAvailableTimeSlotsByDate(filter model.TimeSlotFilter) ([]model.SplittedT
 	h.PhoneNo AS PhoneNo,
 	h.KakaoTalkId AS KakaoTalkId
 	FROM TimeSlot ts
-	LEFT JOIN TimeSlotException e ON 
-	ts.RoomId = e.RoomId 
-	AND ts.DayOfWeek = e.DayOfWeek 
-	AND (e.Date BETWEEN ? AND ?) 
-	AND (e.StartTime <= ts.StartTime AND e.EndTime >= ts.EndTime)
 	LEFT JOIN Room r ON ts.RoomId = r.Id
 	LEFT JOIN RoomGroup g ON r.GroupId = g.Id
 	LEFT JOIN Host h ON g.HostId = h.Id
 	WHERE 
 	ts.Discard = 0
-	AND e.Discard = 0
 	AND r.Discard = 0
 	AND g.Discard = 0
 	AND h.Discard = 0
-	AND e.Id IS NULL
-	ORDER BY ts.DayOfWeek;` //2주단위로 넘어가게 되면 곤란하네..
+	ORDER BY ts.DayOfWeek;`
 
+	if err := filter.ParseTime(); err != nil {
+		return nil, err
+	}
+
+	startYYYYMMDD := util.SafeStr(filter.StartDateTime)[:8]
+	endYYYYMMDD := util.SafeStr(filter.EndDateTime)[:8]
 	params := []any{startYYYYMMDD, endYYYYMMDD}
-
-	/*
-
-		>> 예외 스케줄 케이스::
-
-		1. 예외 시각 Start ~ End와 완전 똑같이 겹침
-		2. 예외 시각 Start ~ End 범위 안에 걸침
-		3. 예외 시각 Start ~ End 범위를 포함함 (즉 중간 일부 시간대 사용불가)
-		4. 예외 시각 Start ~ End 범위의 일부와 겹침. (즉 시작시간이 예외 시각 Start ~ End 범위 안에 걸침)
-		5. 예외 시각 Start ~ End 범위의 일부와 겹침. (즉 종료시간이 예외 시각 Start ~ End 범위 안에 걸침)
-
-		--> 그러면 이 조건을 고려해서 사용할 수 있는 타임슬롯을 골라내려면 쿼리문을 어떻게 짜야하는가?
-		일단, case 1, 2의 경우는 쿼리문에서 확실하게 거를 수 있음 (즉, e.StartTime <= ts.StartTime AND e.EndTime >= ts.EndTime)
-
-		조건 3, 4, 5의 경우는 쿼리에서 필터링하기 힘드니까 이건 후처리를 해서 결과를 만들어주자
-
-		>> 이미 예약된 타임슬롯은 걸러야한다. 그런데 테이블의 타임슬롯은 날짜 단위이기 때문에.. 이것도 후처리를 해줘야 할것같다.
-
-	*/
 
 	var timeSlotDetailGroups []model.TimeSlotsDetail
 	err := DB.Select(&timeSlotDetailGroups, query, params...)
@@ -206,33 +165,44 @@ func GetAvailableTimeSlotsByDate(filter model.TimeSlotFilter) ([]model.SplittedT
 
 	var result []model.SplittedTimeSlot
 
-	for _, timeSlotDetail := range timeSlotDetailGroups {
+	//일단 사용자가 준 검색 기간이 있을거임(start, end) 날짜 기준으로 하루 단위 = 1 loop 로 잡아서 타임 슬롯을 만들어야 한다
+	//주의: 시간 범위 입력할 떄 사용자가 특정 시각대부터 XX분만큼 쓸수있는지 확인을 위해 조회할수도 있다.. (예: 2023-10-01 14:00 ~ 2023-10-01 15:00)
+	var checkDate = filter.StartDateTimeParsed
+	for !checkDate.After(filter.EndDateTimeParsed) {
 
-		dayOfWeek := util.SafeInt(timeSlotDetail.DayOfWeek) 
+		/*
 
-		//이 값을 보고 YYYYMMDD 값을 구해야한다..
-		yyyymmdd := 
+			>> 예외 스케줄 케이스::
 
-		startTimeParsed, err := time.Parse(util.YYYYMMDDhhmmss, util.SafeStr(timeSlotDetail.StartTime))
-		if err != nil {
-			return nil, err
+			1. 예외 시각 Start ~ End와 완전 똑같이 겹침
+			2. 예외 시각 Start ~ End 범위 안에 걸침
+			3. 예외 시각 Start ~ End 범위를 포함함 (즉 중간 일부 시간대 사용불가)
+			4. 예외 시각 Start ~ End 범위의 일부와 겹침. (즉 시작시간이 예외 시각 Start ~ End 범위 안에 걸침)
+			5. 예외 시각 Start ~ End 범위의 일부와 겹침. (즉 종료시간이 예외 시각 Start ~ End 범위 안에 걸침)
+
+			--> 그러면 이 조건을 고려해서 사용할 수 있는 타임슬롯을 골라내려면 쿼리문을 어떻게 짜야하는가?
+			일단, case 1, 2의 경우는 쿼리문에서 확실하게 거를 수 있음 (즉, e.StartTime <= ts.StartTime AND e.EndTime >= ts.EndTime)
+
+			조건 3, 4, 5의 경우는 쿼리에서 필터링하기 힘드니까 이건 후처리를 해서 결과를 만들어주자
+
+			>> 이미 예약된 타임슬롯은 걸러야한다. 그런데 테이블의 타임슬롯은 날짜 단위이기 때문에.. 이것도 후처리를 해줘야 할것같다.
+
+		*/
+
+		//해당 날짜에 대한 요일을 구한다.
+		weekday := checkDate.Weekday()
+
+		switch weekday {
+		case time.Sunday: //0
 		}
 
-		endTimeParsed, err := time.Parse(util.YYYYMMDDhhmmss, util.SafeStr(timeSlotDetail.EndTime))
-		if err != nil {
-			return nil, err
-		}
+		//해당 요일로 열려있는 방 id를 확인
 
-		reservationUnitMinutes := util.SafeInt(timeSlotDetail.ReservationUnitMinutes) //쪼개야 하는 시간의단위(분) 30분 또는 1시간..등등
+		//해당 일자의 요일에 대한 정규 시각을 확인.
+		//예외 규칙에 지정된 날짜, 시간 범위와 겹치는지
 
-		//일단 단위 시간별로 쪼갠다.
-
-		start
-
-
-		//이제 여기서 거를 수 있는 조건들을 거른 다음에 통과한 슬롯만 배열에 append한다
-
-
+		//작업 후에 하루를 더해 다음 날짜에 대해 따진다
+		checkDate = checkDate.Add(time.Hour * 24)
 	}
 
 	return result, nil

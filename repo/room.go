@@ -131,7 +131,7 @@ func GetHostRooms(filter model.RoomFilter) ([]model.RoomDetail, error) {
 		LETF JOIN %s r ON ts.RoomId = r.Id
 		LEFT JOIN %s g ON r.GroupId = g.Id
 		LEFT JOIN %s h ON g.HostId = h.Id`,
-		TimeSlot,
+		DaySlot,
 		Room,
 		RoomGroup,
 		Host)
