@@ -2,6 +2,9 @@ package util
 
 import "time"
 
+var KST, _ = time.LoadLocation("Asia/Seoul")
+
+var YYYYMMDD = "20060102"
 var YYYYMMDDhhmmss = "20060102150405"
 
 func GetCurrentTime() time.Time {

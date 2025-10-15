@@ -122,54 +122,97 @@ func DeleteTimeSlotExceptionByRoomId(roomId int64) error {
 }
 
 func GetAvailableTimeSlotsByDate(filter model.TimeSlotFilter) ([]model.SplittedTimeSlot, error) {
+	//사용자가 준거로 계산하자
+	filterStartDateTime := filter.StartDateTimeParsed
+	filterStartDate := time.Date(filterStartDateTime.Year(), filterStartDateTime.Month(), filterStartDateTime.Day(), 0, 0, 0, 0, util.KST)
+	filterEndDateTime := filter.EndDateTimeParsed
+	filterEndDate := time.Date(filterEndDateTime.Year(), filterEndDateTime.Month(), filterEndDateTime.Day(), 0, 0, 0, 0, util.KST)
 
-	query := `SELECT
-	ts.Id AS Id,
-	ts.StartTime AS StartTime,
-	ts.EndTime AS EndTime,
-	ts.DayOfWeek AS DayOfWeek, 
-	r.Id AS RoomId,
-	r.GroupId AS GroupId,
-	r.RoomName AS RoomName,
-	r.ReservationUnitMinutes AS ReservationUnitMinutes,
-	g.GroupName AS GroupName,
-	g.Address AS Address,
-	h.Id AS HostId,
-	h.HostName AS HostName,
-	h.PhoneNo AS PhoneNo,
-	h.KakaoTalkId AS KakaoTalkId
-	FROM TimeSlot ts
-	LEFT JOIN Room r ON ts.RoomId = r.Id
-	LEFT JOIN RoomGroup g ON r.GroupId = g.Id
-	LEFT JOIN Host h ON g.HostId = h.Id
-	WHERE 
-	ts.Discard = 0
-	AND r.Discard = 0
-	AND g.Discard = 0
-	AND h.Discard = 0
-	ORDER BY ts.DayOfWeek;`
+	var checkDate time.Time = filterStartDate
+	for !checkDate.After(filterEndDate) {
+
+		//각 요일에 맞는 시간표 정보를 가지고 와야해. (열려있는 방목록)
+		////
+		query := `SELECT
+			ds.Id AS Id,
+			ds.StartTime AS StartTime,
+			ds.EndTime AS EndTime,
+			ds.DayOfWeek AS DayOfWeek, 
+			e.StartTime AS ExceptionStartTime,
+			e.EndTime AS ExceptionEndTime,
+			e.Reason AS ExceptionReason,
+			e.ReasonText AS ExceptionReasonText,
+			r.Id AS RoomId,
+			r.GroupId AS GroupId,
+			r.RoomName AS RoomName,
+			r.ReservationUnitMinutes AS ReservationUnitMinutes,
+			g.GroupName AS GroupName,
+			g.Address AS Address,
+			h.Id AS HostId,
+			h.HostName AS HostName,
+			h.PhoneNo AS PhoneNo,
+			h.KakaoTalkId AS KakaoTalkId
+			FROM DaySlot ds
+			LEFT JOIN DaySlotException e ON ds.RoomId = e.RoomId AND e.Date = ?
+			LEFT JOIN Room r ON ds.RoomId = r.Id
+			LEFT JOIN RoomGroup g ON r.GroupId = g.Id
+			LEFT JOIN Host h ON g.HostId = h.Id
+			WHERE 
+			ds.Discard = 0
+			AND e.Discard = 0
+			AND r.Discard = 0
+			AND g.Discard = 0
+			AND h.Discard = 0
+			AND ds.DayOfWeek = ?
+			ORDER BY r.Id;`
+
+		var timeSlotDetailGroupList []model.TimeSlotsDetail
+		err := DB.Select(&timeSlotDetailGroupList, query, checkDate.Format(util.YYYYMMDD), checkDate.Weekday())
+		if err != nil {
+			return nil, err
+		}
+
+		//이 날짜에, 각 방별로 기본적으로 가능한 시간대 범위를 구한다
+		for _, timeSlotDetailGroup := range timeSlotDetailGroupList {
+		}
+
+		checkDate = checkDate.AddDate(0, 0, 1) //하루씩 더해가면서 ..
+	}
 
 	if err := filter.ParseTime(); err != nil {
 		return nil, err
 	}
 
-	startYYYYMMDD := util.SafeStr(filter.StartDateTime)[:8]
-	endYYYYMMDD := util.SafeStr(filter.EndDateTime)[:8]
-	params := []any{startYYYYMMDD, endYYYYMMDD}
+	var result []model.SplittedTimeSlot
 
-	var timeSlotDetailGroups []model.TimeSlotsDetail
-	err := DB.Select(&timeSlotDetailGroups, query, params...)
+	var YYYYMMDD string
+	weekDay := time.Weekday(util.SafeInt(timeSlotDetailGroup.DayOfWeek))
+	switch weekDay {
+	case time.Sunday:
+	case time.Monday:
+	case time.Tuesday:
+	case time.Wednesday:
+	case time.Thursday:
+	case time.Friday:
+	case time.Saturday:
+	}
+
+	//일단 사용자가 준 검색 기간이 있을거임(start, end) 날짜 기준으로 하루 단위 = 1 loop 로 잡아서 타임 슬롯을 만들어야 한다
+	//주의: 시간 범위 입력할 떄 사용자가 특정 시각대부터 XX분만큼 쓸수있는지 확인을 위해 조회할수도 있다.. (예: 2023-10-01 14:00 ~ 2023-10-01 15:00)
+	parsedStartTime, err := time.Parse(util.SafeStr(timeSlotDetailGroup.StartTime), util.YYYYMMDDhhmmss)
 	if err != nil {
 		return nil, err
 	}
 
-	var result []model.SplittedTimeSlot
+	parsedEndTime, err := time.Parse(util.SafeStr(timeSlotDetailGroup.EndTime), util.YYYYMMDDhhmmss)
+	if err != nil {
+		return nil, err
+	}
 
-	//일단 사용자가 준 검색 기간이 있을거임(start, end) 날짜 기준으로 하루 단위 = 1 loop 로 잡아서 타임 슬롯을 만들어야 한다
-	//주의: 시간 범위 입력할 떄 사용자가 특정 시각대부터 XX분만큼 쓸수있는지 확인을 위해 조회할수도 있다.. (예: 2023-10-01 14:00 ~ 2023-10-01 15:00)
-	var checkDate = filter.StartDateTimeParsed
-	for !checkDate.After(filter.EndDateTimeParsed) {
+	for !parsedStartTime.After(filter.EndDateTimeParsed) {
 
+		slotStart := parsedStartTime
+		slotEnd := parsedStartTime.Add(time.Minute)
 		/*
 
 			>> 예외 스케줄 케이스::
@@ -189,20 +232,18 @@ func GetAvailableTimeSlotsByDate(filter model.TimeSlotFilter) ([]model.SplittedT
 
 		*/
 
-		//해당 날짜에 대한 요일을 구한다.
-		weekday := checkDate.Weekday()
+		// //해당 날짜에 대한 요일을 구한다.
+		// weekday := checkDate.Weekday()
 
-		switch weekday {
-		case time.Sunday: //0
-		}
+		// switch weekday {
+		// case time.Sunday: //0
+		// }
 
 		//해당 요일로 열려있는 방 id를 확인
 
 		//해당 일자의 요일에 대한 정규 시각을 확인.
 		//예외 규칙에 지정된 날짜, 시간 범위와 겹치는지
 
-		//작업 후에 하루를 더해 다음 날짜에 대해 따진다
-		checkDate = checkDate.Add(time.Hour * 24)
 	}
 
 	return result, nil
