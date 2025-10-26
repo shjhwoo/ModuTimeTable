@@ -79,14 +79,13 @@ func DeleteRoomAndTimeSlots(c *gin.Context) {
 	c.JSON(200, nil)
 }
 
-func GetHostRooms(c *gin.Context) {
+func GetRooms(c *gin.Context) {
 	var query model.RoomFilter
 	if err := c.ShouldBindQuery(&query); err != nil {
 		c.JSON(400, gin.H{"error": "invalid query parameters: " + err.Error()})
 		return
 	}
 
-	//query.UserIdList = util.ParseQueryArrayToInt64List(c.QueryArray("userId"))
 	query.RoomIdList = util.ParseQueryArrayToInt64List(c.QueryArray("roomId"))
 	query.HostIdList = util.ParseQueryArrayToInt64List(c.QueryArray("hostId"))
 	query.GroupIdList = util.ParseQueryArrayToInt64List(c.QueryArray("groupId"))

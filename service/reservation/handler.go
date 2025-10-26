@@ -4,8 +4,8 @@ import "github.com/gin-gonic/gin"
 
 func BuildRoutes(r *gin.Engine) {
 
-	r.GET("/timeSlots/date", GetTimeSlotsByDate) //
-	r.GET("/timeSlots/rooms", GetTimeSlots)      //특정 룸의 특정 날짜 범위에 대한 타임슬롯들 조회
+	r.GET("/timeSlots/date", GetAvailableTimeSlotsByDate) //
+	r.GET("/room/timeSlots", GetAvailableTimeSlotsByRoom) //특정 룸의 특정 날짜 범위에 대한 타임슬롯들 조회
 
 	r.POST("/reservation", CreateReservation)   //예약 생성
 	r.PATCH("/reservation", UpdateReservation)  //예약 수정

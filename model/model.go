@@ -1,6 +1,7 @@
 package model
 
 import (
+	"fmt"
 	"musicRoomBookingbot/util"
 	"time"
 )
@@ -16,18 +17,15 @@ type Host struct {
 }
 
 type RoomFilter struct {
-	UserIdList       []*int64 `form:"userId" json:"userIdList"`                 //특정 유저 아이디들
-	RoomIdList       []*int64 `form:"roomId" json:"roomIdList"`                 //특정 룸 아이디들
-	HostIdList       []*int64 `form:"hostId" json:"hostIdList"`                 //특정 호스트 아이디들
-	GroupIdList      []*int64 `form:"groupId" json:"groupIdList"`               //특정 룸 그룹 아이디들
-	DayOfWeekStart   *int     `form:"dayOfWeekStart" json:"dayOfWeekStart"`     //예약 가능 요일 시작
-	DayOfWeekEnd     *int     `form:"dayOfWeekEnd" json:"dayOfWeekEnd"`         //예약 가능 요일 끝
-	StartTime        *string  `form:"startTime" json:"startTime"`               //예약 가능 시작 시간
-	EndTime          *string  `form:"endTime" json:"endTime"`                   //예약 가능 끝 시간
-	HostNameLike     *string  `form:"hostNameLike" json:"hostNameLike"`         //호스트 이름. 예: xx음악학원, oo연습실 등
-	GroupNameLike    *string  `form:"groupNameLike" json:"groupNameLike"`       //지점 이름
-	RoomNameLike     *string  `form:"roomNameLike" json:"roomNameLike"`         //연습실 이름
-	AddressLike      *string  `form:"addressLike" json:"addressLike"`           //주소
+	UserIdList       []*int64 `form:"userId" json:"userIdList"`             //특정 유저 아이디들
+	RoomIdList       []*int64 `form:"roomId" json:"roomIdList"`             //특정 룸 아이디들
+	HostIdList       []*int64 `form:"hostId" json:"hostIdList"`             //특정 호스트 아이디들
+	GroupIdList      []*int64 `form:"groupId" json:"groupIdList"`           //특정 룸 그룹 아이디들
+	DayOfWeekStart   *int     `form:"dayOfWeekStart" json:"dayOfWeekStart"` //예약 가능 요일 시작
+	DayOfWeekEnd     *int     `form:"dayOfWeekEnd" json:"dayOfWeekEnd"`     //예약 가능 요일 끝
+	StartTime        *string  `form:"startTime" json:"startTime"`           //예약 가능 시작 시간
+	EndTime          *string  `form:"endTime" json:"endTime"`               //예약 가능 끝 시간
+	Keyword          *string  `form:"keyword" json:"keyword"`
 	OccupationStatus *int     `form:"occupationStatus" json:"occupationStatus"` //0:빈방, 1:예약불가
 }
 
@@ -53,7 +51,6 @@ type Room struct {
 	Discard                 *int    `form:"discard" json:"discard" db:"Discard"`
 	ReservableDaysMinOffset *int    `form:"reservableDaysMinOffset" json:"reservableDaysMinOffset" db:"ReservableDaysMinOffset"`
 	ReservableDaysMaxOffset *int    `form:"reservableDaysMaxOffset" json:"reservableDaysMaxOffset" db:"ReservableDaysMaxOffset"`
-	ReservationUnitMinutes  *int    `form:"reservationUnitMinutes" json:"reservationUnitMinutes" db:"ReservationUnitMinutes"`
 }
 
 type Reservation struct {
@@ -70,28 +67,60 @@ type Reservation struct {
 }
 
 type TimeSlotException struct {
-	Id         *int64  `form:"id" json:"id" db:"Id"`
-	RoomId     *int64  `form:"roomId" json:"roomId" db:"RoomId"`
-	Date       *string `form:"date" json:"date" db:"Date"`
-	DayOfWeek  *int    `form:"dayOfWeek" json:"dayOfWeek" db:"DayOfWeek"`
-	StartTime  *string `form:"startTime" json:"startTime" db:"StartTime"`
-	EndTime    *string `form:"endTime" json:"endTime" db:"EndTime"`
-	Reason     *int    `form:"reason" json:"reason" db:"Reason"`
-	ReasonText *string `form:"reasonText" json:"reasonText" db:"ReasonText"`
-	Discard    *int    `form:"discard" json:"discard" db:"Discard"`
+	Id            *int64  `form:"id" json:"id" db:"Id"`
+	RoomId        *int64  `form:"roomId" json:"roomId" db:"RoomId"`
+	Date          *string `form:"date" json:"date" db:"Date"` //YYYYMMDD
+	DayOfWeek     *int    `form:"dayOfWeek" json:"dayOfWeek" db:"DayOfWeek"`
+	StartTime     *string `form:"startTime" json:"startTime" db:"StartTime"`
+	StartYYYYMMDD time.Time
+	EndTime       *string `form:"endTime" json:"endTime" db:"EndTime"`
+	EndYYYYMMDD   time.Time
+	Reason        *int    `form:"reason" json:"reason" db:"Reason"`
+	ReasonText    *string `form:"reasonText" json:"reasonText" db:"ReasonText"`
+	Discard       *int    `form:"discard" json:"discard" db:"Discard"`
+}
+
+func (e *TimeSlotException) ParseStartAndEndTime() error {
+
+	startStr := fmt.Sprintf("%s%s", util.SafeStr(e.Date), util.SafeStr(e.StartTime))
+	start, err := time.ParseInLocation(util.YYYYMMDDhhmm, startStr, util.KST)
+	if err != nil {
+		return err
+	}
+	e.StartYYYYMMDD = start
+
+	endStr := fmt.Sprintf("%s%s", util.SafeStr(e.Date), util.SafeStr(e.EndTime))
+	end, err := time.ParseInLocation(util.YYYYMMDDhhmm, endStr, util.KST)
+	if err != nil {
+		return err
+	}
+	e.EndYYYYMMDD = end
+
+	return nil
+}
+
+// 날짜 - 시작시각 HHMM 끝시각 HHMM
+type TimeSlotExceptionDayMap map[string][]TimeSlotExceptionHHMM
+
+type TimeSlotExceptionHHMM struct {
+	Start time.Time
+	End   time.Time
 }
 
 type TimeSlotsDetail struct {
-	Id                     *int64  `form:"id" json:"id" db:"Id"`
-	StartTime              *string `form:"startTime" json:"startTime" db:"StartTime"`
-	EndTime                *string `form:"endTime" json:"endTime" db:"EndTime"`
-	DayOfWeek              *int    `form:"dayOfWeek" json:"dayOfWeek" db:"DayOfWeek"`
-	RoomId                 *int64  `form:"roomId" json:"roomId" db:"RoomId"`
-	RoomName               *string `form:"roomName" json:"roomName" db:"RoomName"`
-	ReservationUnitMinutes *int    `form:"reservationUnitMinutes" json:"reservationUnitMinutes" db:"ReservationUnitMinutes"`
-	GroupId                *int64  `form:"groupId" json:"groupId" db:"GroupId"`
-	GroupName              *string `form:"groupName" json:"groupName" db:"GroupName"`
-	Address                *string `form:"address" json:"address" db:"Address"`
+	Id                      *int64             `form:"id" json:"id" db:"Id"`
+	StartTime               *string            `form:"startTime" json:"startTime" db:"StartTime"`
+	EndTime                 *string            `form:"endTime" json:"endTime" db:"EndTime"`
+	SplittedSlots           []SplittedTimeSlot `json:"splittedSlots"`
+	DayOfWeek               *int               `form:"dayOfWeek" json:"dayOfWeek" db:"DayOfWeek"`
+	RoomId                  *int64             `form:"roomId" json:"roomId" db:"RoomId"`
+	RoomName                *string            `form:"roomName" json:"roomName" db:"RoomName"`
+	ReservationUnitMinutes  *int               `form:"reservationUnitMinutes" json:"reservationUnitMinutes" db:"ReservationUnitMinutes"`
+	ReservableDaysMinOffset *int               `form:"reservableDaysMinOffset" json:"reservableDaysMinOffset" db:"ReservableDaysMinOffset"`
+	ReservableDaysMaxOffset *int               `form:"reservableDaysMaxOffset" json:"reservableDaysMaxOffset" db:"ReservableDaysMaxOffset"`
+	GroupId                 *int64             `form:"groupId" json:"groupId" db:"GroupId"`
+	GroupName               *string            `form:"groupName" json:"groupName" db:"GroupName"`
+	Address                 *string            `form:"address" json:"address" db:"Address"`
 }
 
 type TimeSlot struct {
@@ -113,9 +142,9 @@ var Sunday = 6
 
 type SplittedTimeSlot struct {
 	StartTimeParsed time.Time
-	StartTime       *string `form:"startTime" json:"startTime"`
+	StartTime       *string `form:"startTime" json:"startTime"` //YYYYMMDDhhmm
 	EndTimeParsed   time.Time
-	EndTime         *string `form:"endTime" json:"endTime"`
+	EndTime         *string `form:"endTime" json:"endTime"` //YYYYMMDDhhmm
 }
 
 type TimeSlotFilter struct {
@@ -123,9 +152,11 @@ type TimeSlotFilter struct {
 	StartDateTimeParsed time.Time
 	EndDateTime         *string `form:"endDateTime" json:"endDateTime"`
 	EndDateTimeParsed   time.Time
+	Keyword             *string  `form:"keyword" json:"keyword"`     //호스트, 지점, 연습실 이름
 	HostIdList          []*int64 `form:"hostId" json:"hostIdList"`   //특정 호스트 아이디들
 	GroupIdList         []*int64 `form:"groupId" json:"groupIdList"` //특정 룸 그룹 아이디들
 	RoomIdList          []*int64 `form:"roomId" json:"roomIdList"`   //특정 룸 아이디들
+
 }
 
 func (tf *TimeSlotFilter) ParseTime() error {

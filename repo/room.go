@@ -77,9 +77,24 @@ func buildHostRoomWhereCondtions(filter model.RoomFilter) ([]string, []any) {
 		params = append(params, *filter.DayOfWeekEnd)
 	}
 
-	if filter.RoomNameLike != nil {
-		whereCondiions = append(whereCondiions, "r.RoomName LIKE ?")
-		params = append(params, "%"+*filter.RoomNameLike+"%")
+	if filter.Keyword != nil {
+		var ORConditions []string
+
+		ORConditions = append(ORConditions, "h.HostName LIKE ?")
+		params = append(params, "%"+*filter.Keyword+"%")
+
+		ORConditions = append(ORConditions, "g.GroupName LIKE ?")
+		params = append(params, "%"+*filter.Keyword+"%")
+
+		ORConditions = append(ORConditions, "g.Address LIKE ?")
+		params = append(params, "%"+*filter.Keyword+"%")
+
+		ORConditions = append(ORConditions, "r.RoomName LIKE ?")
+		params = append(params, "%"+*filter.Keyword+"%")
+
+		orCondtiion := strings.Join(ORConditions, " OR ")
+		whereCondiions = append(whereCondiions, orCondtiion)
+
 	}
 
 	if len(filter.RoomIdList) > 0 {
@@ -88,11 +103,6 @@ func buildHostRoomWhereCondtions(filter model.RoomFilter) ([]string, []any) {
 		for _, id := range filter.RoomIdList {
 			params = append(params, id)
 		}
-	}
-
-	if filter.AddressLike != nil {
-		whereCondiions = append(whereCondiions, "g.Address LIKE ?")
-		params = append(params, "%"+*filter.AddressLike+"%")
 	}
 
 	if len(filter.GroupIdList) > 0 {

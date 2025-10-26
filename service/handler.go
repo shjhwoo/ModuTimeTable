@@ -25,7 +25,6 @@ func InitRouter() {
 	))
 
 	//핸들러..
-
 	host.BuildRoutes(Router)
 	reservation.BuildRoutes(Router)
 

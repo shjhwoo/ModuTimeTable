@@ -18,5 +18,5 @@ func BuildRoutes(r *gin.Engine) {
 	r.PATCH("/host/roomGroup/room/timeSlotException", UpdateTimeSlotException)  //룸 예약 예외 정책 수정
 	r.DELETE("/host/roomGroup/room/timeSlotException", DeleteTimeSlotException) //룸 예약 예외 정책 삭제
 
-	r.GET("/host/rooms", GetHostRooms) //호스트의 룸들 조회
+	r.GET("/host/rooms", GetRooms) //호스트의 룸들 조회
 }
