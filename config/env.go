@@ -21,11 +21,11 @@ type EnvVars struct {
 	SERVER_BASE_URL  string `envconfig:"SERVER_BASE_URL" default:"/api"`
 
 	DB_DRIVER_NAME string `envconfig:"DB_DRIVER_NAME" default:"mysql"`
-	DB_URL         string `envconfig:"DB_URL" default:"starfruit-database"`
-	DB_PORT        string `envconfig:"DB_PORT" default:"3306"`
-	DB_NAME        string `envconfig:"DB_NAME" default:"starfruit"`
-	DB_USER        string `envconfig:"DB_USER" default:"root"`
-	DB_PW          string `envconfig:"DB_PW" default:"1234"`
+	DB_URL         string `envconfig:"DB_URL" default:"localhost"`
+	DB_PORT        string `envconfig:"DB_PORT" default:"3308"`
+	DB_NAME        string `envconfig:"DB_NAME" default:"MusicRoom"`
+	DB_USER        string `envconfig:"DB_USER" default:"musicroom"`
+	DB_PW          string `envconfig:"DB_PW" default:"qwe123Yt"`
 }
 
 func LoadEnv() {

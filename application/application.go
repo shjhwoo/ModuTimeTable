@@ -41,7 +41,9 @@ func GetInstance(ctx context.Context, cancelFunc func()) *Application {
 
 		service.InitRouter()
 
-		if err := repo.ConnectDataBase(); err != nil {
+		dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s", config.Env.DB_USER, config.Env.DB_PW, config.Env.DB_URL, config.Env.DB_PORT, config.Env.DB_NAME)
+
+		if err := repo.ConnectDataBase(dsn); err != nil {
 			fmt.Printf("Failed to set DB connection, error = %s", err)
 			os.Exit(1)
 		}

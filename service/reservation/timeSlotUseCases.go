@@ -4,14 +4,13 @@ import (
 	"musicRoomBookingbot/model"
 	"musicRoomBookingbot/repo"
 	"musicRoomBookingbot/util"
-	"time"
 
 	"github.com/gin-gonic/gin"
 )
 
 // 모든 시간대 정보를 가지고 오고,
 // 각 시간 범위에 잡혀있는 예약 상태 정보를 같이 가지고 온다(예약가능, 예약중, 예약불가 예외시간대)
-func GetAvailableTimeSlotsByDate(c *gin.Context) {
+func GetTimeSlotsByDate(c *gin.Context) {
 	var query model.TimeSlotFilter
 	if err := c.ShouldBindQuery(&query); err != nil {
 		c.JSON(400, gin.H{"error": err.Error()})
@@ -22,7 +21,7 @@ func GetAvailableTimeSlotsByDate(c *gin.Context) {
 	query.GroupIdList = util.ParseQueryArrayToInt64List(c.QueryArray("groupId"))
 	query.RoomIdList = util.ParseQueryArrayToInt64List(c.QueryArray("roomId"))
 
-	repo.GetAvailableTimeSlotsByDate(query)
+	//repo.GetAvailableTimeSlotsByDate(query)
 
 }
 
@@ -49,56 +48,57 @@ func GetAvailableTimeSlotsByRoom(c *gin.Context) {
 
 	roomIdInt64 := util.ParseInt64(roomId)
 
-	basicTimeSlotListMap, err := repo.GetBasicTimeSlotsByRoom(roomIdInt64)
+	//basicTimeSlotListMap
+	_, err := repo.GetBasicTimeSlotsByRoom(roomIdInt64)
 	if err != nil {
 		c.JSON(500, gin.H{"error": err.Error()})
 		return
 	}
 
 	//2.예약 가능한 일정 범위, 오늘 날짜 비교해서 시작 일자, 최대 늦은 일자 범위를 구한다 -- 일자 목록들이 쭉 나온다
-	today := util.GetCurrentDate()
-	reservableStartDate := today.Add(24 * time.Hour * time.Duration(util.SafeInt(basicTimeSlotListMap[0].ReservableDaysMinOffset)))
-	reservableEndDate := today.Add(24 * time.Hour * time.Duration(util.SafeInt(basicTimeSlotListMap[0].ReservableDaysMaxOffset)))
+	//today := util.GetCurrentDate()
+	//reservableStartDate := today.Add(24 * time.Hour * time.Duration(util.SafeInt(basicTimeSlotListMap[0].ReservableDaysMinOffset)))
+	//reservableEndDate := today.Add(24 * time.Hour * time.Duration(util.SafeInt(basicTimeSlotListMap[0].ReservableDaysMaxOffset)))
 
-	timeSlotExceptionMap, err := repo.GetTimeSlotExceptionsByRoomId(
-		roomIdInt64,
-		reservableStartDate.Format(util.YYYYMMDD),
-		reservableEndDate.Format(util.YYYYMMDD),
-	)
+	// timeSlotExceptionMap, err := repo.GetTimeSlotExceptionsByRoomId(
+	// 	roomIdInt64,
+	// 	reservableStartDate.Format(util.YYYYMMDD),
+	// 	reservableEndDate.Format(util.YYYYMMDD),
+	// )
 
 	//3. 2에서 구한 일자 목록들과, 예외로 사용을 할 수 없는 슬롯 시간대 정보를 비교해서 타임 슬롯 리스트에 append한다.
 	//일자별로 시작시간, 끝시간이 있을거야. 예 - 2시부터 7시
 	var availableTimeSlotMap map[string][]model.SplittedTimeSlot //날짜 YYYYMMDD ~ []가능한 시간대(시작 - 끝)
-	slotDate := reservableStartDate
-	for !slotDate.Equal(reservableEndDate) {
+	// slotDate := reservableStartDate
+	// for !slotDate.Equal(reservableEndDate) {
 
-		slotWeekay := int(slotDate.Weekday())
+	// 	slotWeekay := int(slotDate.Weekday())
 
-		basicSlotGroups := basicTimeSlotListMap[slotWeekay]
+	// 	basicSlotGroups := basicTimeSlotListMap[slotWeekay]
 
-		basicSlotBorderStart := basicSlotGroups[0].StartTime
-		basicSlotBorderEnd := basicSlotGroups[len(basicSlotGroups)-1].EndTime
+	// 	basicSlotBorderStart := basicSlotGroups[0].StartTime
+	// 	basicSlotBorderEnd := basicSlotGroups[len(basicSlotGroups)-1].EndTime
 
-		exceptionSlots := timeSlotExceptionMap[slotDate.Format(util.YYYYMMDD)]
-		if exceptionSlots != nil {
+	// 	exceptionSlots := timeSlotExceptionMap[slotDate.Format(util.YYYYMMDD)]
+	// 	if exceptionSlots != nil {
 
-			for _, basicSlotGroup := range basicSlotGroups {
-				for _, splittedSlot := range basicSlotGroups {
-					//예외시간범위 안에 포함이 되거나 완전 똑같이 겹치는 경우
-					//슬롯 시작시각 ~ 종료 시각 사이에 예외 시작시각 ~ 예외 종료시각이 완전 포함이 되는 경우
-					//예외 시작시각이 해당 슬롯의 시작시각 ~ 종료시각 사이에 걸처져 있는 경우 : 해당 슬롯 종료 시각을 예외 시작시각으로 조정한다
-					//예외 종료 시각이 해당 슬롯의 시작 시각 ~ 종료시각 사이에 걸쳐져 있는 경우 : 해당 슬롯의 시작시각을 예외 종료 시각으로 조정한다
+	// 		for _, basicSlotGroup := range basicSlotGroups {
+	// 			for _, splittedSlot := range basicSlotGroups {
+	// 				//예외시간범위 안에 포함이 되거나 완전 똑같이 겹치는 경우
+	// 				//슬롯 시작시각 ~ 종료 시각 사이에 예외 시작시각 ~ 예외 종료시각이 완전 포함이 되는 경우
+	// 				//예외 시작시각이 해당 슬롯의 시작시각 ~ 종료시각 사이에 걸처져 있는 경우 : 해당 슬롯 종료 시각을 예외 시작시각으로 조정한다
+	// 				//예외 종료 시각이 해당 슬롯의 시작 시각 ~ 종료시각 사이에 걸쳐져 있는 경우 : 해당 슬롯의 시작시각을 예외 종료 시각으로 조정한다
 
-				}
-			}
+	// 			}
+	// 		}
 
-		} else {
-			//그날은 사용 가능.
-			//그러나 예약을 한 사람들이 있는지 확인을 해야하고 그 부분을 제외처리 해야 한다
-		}
+	// 	} else {
+	// 		//그날은 사용 가능.
+	// 		//그러나 예약을 한 사람들이 있는지 확인을 해야하고 그 부분을 제외처리 해야 한다
+	// 	}
 
-		slotDate.Add(time.Hour * 24)
-	}
+	// 	slotDate.Add(time.Hour * 24)
+	// }
 
 	// for weekday, basicSlotGroup := range basicTimeSlotListMap {
 
@@ -119,7 +119,6 @@ func GetAvailableTimeSlotsByRoom(c *gin.Context) {
 	// }
 
 	c.JSON(200, availableTimeSlotMap)
-	return
 }
 
 func CreateReservation(c *gin.Context) {}

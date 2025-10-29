@@ -64,6 +64,7 @@ type Reservation struct {
 	ExtendedMinutes *int   `form:"extendedMinutes" json:"extendedMinutes" db:"ExtendedMinutes"`
 	Status          *int   `form:"status" json:"status" db:"Status"`
 	CancelReason    *int   `form:"cancelReason" json:"cancelReason" db:"CancelReason"`
+	Discard         *int   `form:"discard" json:"discard" db:"Discard"`
 }
 
 type TimeSlotException struct {
