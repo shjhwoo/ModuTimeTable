@@ -22,7 +22,7 @@ func CreateRoomAndTimeSlots(c *gin.Context) {
 	}
 
 	for _, policy := range body.TimeSlots {
-		policy.RoomId = &roomId
+		policy.RoomId = roomId
 		_, err := repo.InsertTimeSlot(policy)
 		if err != nil {
 			c.JSON(500, gin.H{"error": "failed to create booking policy: " + err.Error()})

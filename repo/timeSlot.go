@@ -2,6 +2,7 @@ package repo
 
 import (
 	"fmt"
+	"log"
 	"musicRoomBookingbot/model"
 	"musicRoomBookingbot/util"
 	"strings"
@@ -136,7 +137,7 @@ func GetTimeSlotExceptionsByRoomId(roomId int64, startDate, endDate string) (mod
 
 	var timeSlotExceptionMap = make(model.TimeSlotExceptionDayMap)
 	for _, exception := range timeSlotExceptions {
-		exceptionYYYYMMDD := util.SafeStr(exception.Date)
+		exceptionYYYYMMDD := exception.Date
 
 		err := exception.ParseStartAndEndTime()
 		if err != nil {
@@ -153,56 +154,110 @@ func GetTimeSlotExceptionsByRoomId(roomId int64, startDate, endDate string) (mod
 }
 
 func GetBasicTimeSlotsByRoom(roomId int64) (map[int][]model.TimeSlotsDetail, error) {
-	query := fmt.Sprintf(`SELECT 
-	ds.*,
-	ReservableDaysMinOffset,
-	ReservableDaysMaxOffset,
+	query := fmt.Sprintf(`SELECT ds.*
 	FROM %s AS ds
-	LEFT JOIN %s AS r
+	LEFT JOIN %s AS r ON ds.RoomId = r.Id
 	WHERE ds.RoomId = ? 
 	AND ds.Discard = 0 
 	AND r.Discard = 0
-	ORDER BY ds.DayOfWeek, ds.StartTime;`, Room, DaySlot)
+	ORDER BY ds.DayOfWeek, ds.StartTime;`, DaySlot, Room)
 
-	var timeSlots []model.TimeSlotsDetail
+	var timeSlots []model.TimeSlot
 	err := DB.Select(&timeSlots, query, roomId)
 	if err != nil {
-		return nil, err
+		return nil, util.WrapWithStack(err)
 	}
 
-	var result = make(map[int][]model.TimeSlotsDetail)
-	for _, slotGroup := range timeSlots {
-		dayOfWeek := util.SafeInt(slotGroup.DayOfWeek)
-		unitMinutes := util.SafeInt(slotGroup.ReservationUnitMinutes)
+	var timeSlotMap = make(map[int][]model.TimeSlot)
+	for _, slot := range timeSlots {
+		timeSlotMap[slot.DayOfWeek] = append(timeSlotMap[slot.DayOfWeek], slot)
+	}
 
-		borderStart, err := time.ParseInLocation(util.YYYYMMDDhhmm, util.SafeStr(slotGroup.StartTime), util.KST)
-		if err != nil {
-			return nil, err
-		}
+	room, err := GetRoom(roomId)
+	if err != nil {
+		return nil, util.WrapWithStack(err)
+	}
 
-		borderEnd, err := time.ParseInLocation(util.YYYYMMDDhhmm, util.SafeStr(slotGroup.EndTime), util.KST)
-		if err != nil {
-			return nil, err
-		}
+	reservableDaysMinOffset := room.ReservableDaysMinOffset
+	reservableDaysMaxOffset := room.ReservableDaysMaxOffset
 
-		var start = borderStart
-		for !start.Equal(borderEnd) {
-			slotStart := start
-			slotEnd := slotStart.Add(time.Minute * time.Duration(unitMinutes))
-			if slotEnd.After(borderEnd) {
-				slotEnd = borderEnd
+	todayYYYYMMDD := util.GetCurrentDate()
+	borderStartTime := todayYYYYMMDD.Add(time.Duration(reservableDaysMinOffset) * 24 * time.Hour)
+	if reservableDaysMinOffset == 0 {
+		borderStartTime = util.GetCurrentYYYYMMDDhhmm()
+	}
+	borderEndTime := todayYYYYMMDD.Add(time.Duration(reservableDaysMaxOffset) * 24 * time.Hour)
+	log.Println("예약 가능 시작 시각:", borderStartTime, "예약 가능 마지막 시각:", borderEndTime)
+
+	var slotStartTime = borderStartTime
+
+	for !slotStartTime.After(borderEndTime) {
+		log.Println("해당 일자의 요일은? ", slotStartTime.Weekday())
+
+		//해당 요일에 대한 예약 가능 시간의 단위를 구한다
+		dayOfWeek := int(slotStartTime.Weekday())
+		yyyymmdd := slotStartTime.Format(util.YYYYMMDD)
+
+		for _, basicSlot := range timeSlotMap[dayOfWeek] {
+
+			err := basicSlot.ParseStartAndEndTime(yyyymmdd)
+			if err != nil {
+				return nil, util.WrapWithStack(err)
 			}
 
-			slotGroup.SplittedSlots = append(slotGroup.SplittedSlots, model.SplittedTimeSlot{
-				StartTimeParsed: slotStart,
-				EndTimeParsed:   slotEnd,
-			})
+			log.Println("슬롯 시작 시각: ", basicSlot.StartTimeParsed, "슬롯 종료 시각: ", basicSlot.EndTimeParsed, "해당 구간 예약 시간 단위(분): ", basicSlot.ReservationUnitMinutes)
+			if slotStartTime.After(basicSlot.EndTimeParsed) {
+				log.Println("현재 시각이 슬롯 종료 시각 이후이기 때문에 다음으로 넘어간다")
+				continue
+			}
+
 		}
 
-		result[dayOfWeek] = append(result[dayOfWeek], slotGroup)
+		slotStartTime = slotStartTime.Add(24 * time.Hour)
 	}
 
+	// for _, slotGroup := range timeSlots {
+	// 	dayOfWeek := slotGroup.DayOfWeek
+	// 	unitMinutes := slotGroup.ReservationUnitMinutes
+
+	// 	borderStart, err := time.ParseInLocation(util.YYYYMMDDhhmm, slotGroup.StartTime, util.KST)
+	// 	if err != nil {
+	// 		return nil, util.WrapWithStack(err)
+	// 	}
+
+	// 	borderEnd, err := time.ParseInLocation(util.YYYYMMDDhhmm, slotGroup.EndTime, util.KST)
+	// 	if err != nil {
+	// 		return nil, util.WrapWithStack(err)
+	// 	}
+
+	// 	var start = borderStart
+	// 	for !start.Equal(borderEnd) {
+	// 		slotStart := start
+	// 		slotEnd := slotStart.Add(time.Minute * time.Duration(unitMinutes))
+	// 		if slotEnd.After(borderEnd) {
+	// 			slotEnd = borderEnd
+	// 		}
+
+	// 		slotGroup.SplittedSlots = append(slotGroup.SplittedSlots, model.SplittedTimeSlot{
+	// 			StartTimeParsed: slotStart,
+	// 			EndTimeParsed:   slotEnd,
+	// 		})
+	// 	}
+
+	// 	result[dayOfWeek] = append(result[dayOfWeek], slotGroup)
+	// }
+
 	return result, nil
+}
+
+func GetRoom(roomId int64) (*model.Room, error) {
+	query := fmt.Sprintf(`SELECT * FROM %s WHERE Id = ? AND Discard = 0;`, Room)
+	var room model.Room
+	err := DB.Get(&room, query, roomId)
+	if err != nil {
+		return nil, util.WrapWithStack(err)
+	}
+	return &room, nil
 }
 
 // func GetAvailableTimeSlotsByDate(filter model.TimeSlotFilter) ([]model.SplittedTimeSlot, error) {
@@ -270,7 +325,7 @@ func GetBasicTimeSlotsByRoom(roomId int64) (map[int][]model.TimeSlotsDetail, err
 // 	var result []model.SplittedTimeSlot
 
 // 	var YYYYMMDD string
-// 	weekDay := time.Weekday(util.SafeInt(timeSlotDetailGroup.DayOfWeek))
+// 	weekDay := time.Weekday(timeSlotDetailGroup.DayOfWeek))
 // 	switch weekDay {
 // 	case time.Sunday:
 // 	case time.Monday:
@@ -283,7 +338,7 @@ func GetBasicTimeSlotsByRoom(roomId int64) (map[int][]model.TimeSlotsDetail, err
 
 // 	//일단 사용자가 준 검색 기간이 있을거임(start, end) 날짜 기준으로 하루 단위 = 1 loop 로 잡아서 타임 슬롯을 만들어야 한다
 // 	//주의: 시간 범위 입력할 떄 사용자가 특정 시각대부터 XX분만큼 쓸수있는지 확인을 위해 조회할수도 있다.. (예: 2023-10-01 14:00 ~ 2023-10-01 15:00)
-// 	parsedStartTime, err := time.Parse(util.SafeStr(timeSlotDetailGroup.StartTime), util.YYYYMMDDhhmmss)
+// 	parsedStartTime, err := time.Parse(timeSlotDetailGroup.StartTime), util.YYYYMMDDhhmmss)
 // 	if err != nil {
 // 		return nil, err
 // 	}

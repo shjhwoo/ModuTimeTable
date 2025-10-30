@@ -22,6 +22,18 @@ func GetCurrentDate() time.Time {
 	return time.Date(yyyy, mm, dd, 0, 0, 0, 0, KST)
 }
 
+func GetCurrentYYYYMMDDhhmm() time.Time {
+	current := GetCurrentTime()
+
+	yyyy := current.Year()
+	mm := current.Month()
+	dd := current.Day()
+	hh := current.Hour()
+	min := current.Minute()
+
+	return time.Date(yyyy, mm, dd, hh, min, 0, 0, KST)
+}
+
 func GetCurrentWeekDay() int {
 	return int(GetCurrentTime().Weekday())
 }

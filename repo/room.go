@@ -66,31 +66,31 @@ func buildHostRoomWhereCondtions(filter model.RoomFilter) ([]string, []any) {
 	whereCondiions = append(whereCondiions, "g.Discard = 0")
 	whereCondiions = append(whereCondiions, "h.Discard = 0")
 
-	if filter.DayOfWeekStart != nil && filter.DayOfWeekEnd != nil {
+	if filter.DayOfWeekStart != 0 && filter.DayOfWeekEnd != 0 {
 		whereCondiions = append(whereCondiions, "ts.DayOfWeek BETWEEN ? AND ?")
-		params = append(params, *filter.DayOfWeekStart, *filter.DayOfWeekEnd)
-	} else if filter.DayOfWeekStart != nil {
+		params = append(params, filter.DayOfWeekStart, filter.DayOfWeekEnd)
+	} else if filter.DayOfWeekStart != 0 {
 		whereCondiions = append(whereCondiions, "ts.DayOfWeek >= ?")
-		params = append(params, *filter.DayOfWeekStart)
-	} else if filter.DayOfWeekEnd != nil {
+		params = append(params, filter.DayOfWeekStart)
+	} else if filter.DayOfWeekEnd != 0 {
 		whereCondiions = append(whereCondiions, "ts.DayOfWeek <= ?")
-		params = append(params, *filter.DayOfWeekEnd)
+		params = append(params, filter.DayOfWeekEnd)
 	}
 
-	if filter.Keyword != nil {
+	if filter.Keyword != "" {
 		var ORConditions []string
 
 		ORConditions = append(ORConditions, "h.HostName LIKE ?")
-		params = append(params, "%"+*filter.Keyword+"%")
+		params = append(params, "%"+filter.Keyword+"%")
 
 		ORConditions = append(ORConditions, "g.GroupName LIKE ?")
-		params = append(params, "%"+*filter.Keyword+"%")
+		params = append(params, "%"+filter.Keyword+"%")
 
 		ORConditions = append(ORConditions, "g.Address LIKE ?")
-		params = append(params, "%"+*filter.Keyword+"%")
+		params = append(params, "%"+filter.Keyword+"%")
 
 		ORConditions = append(ORConditions, "r.RoomName LIKE ?")
-		params = append(params, "%"+*filter.Keyword+"%")
+		params = append(params, "%"+filter.Keyword+"%")
 
 		orCondtiion := strings.Join(ORConditions, " OR ")
 		whereCondiions = append(whereCondiions, orCondtiion)
@@ -165,7 +165,7 @@ func GetHostRooms(filter model.RoomFilter) ([]model.RoomDetail, error) {
 
 	var roomIdTimeSlotsMap = make(map[int64][]model.TimeSlotsDetail)
 	for _, timeSlotDetail := range timeSlots {
-		roomId := *timeSlotDetail.RoomId
+		roomId := timeSlotDetail.RoomId
 
 		roomIdTimeSlotsMap[roomId] = append(roomIdTimeSlotsMap[roomId], timeSlotDetail)
 	}
@@ -174,7 +174,7 @@ func GetHostRooms(filter model.RoomFilter) ([]model.RoomDetail, error) {
 	for roomId, timeSlots := range roomIdTimeSlotsMap {
 		roomDetail := model.RoomDetail{
 			Room: model.Room{
-				Id:       &roomId,
+				Id:       roomId,
 				RoomName: timeSlots[0].RoomName,
 				GroupId:  timeSlots[0].GroupId,
 			},
@@ -182,7 +182,7 @@ func GetHostRooms(filter model.RoomFilter) ([]model.RoomDetail, error) {
 
 		for _, timeSlot := range timeSlots {
 			roomDetail.TimeSlots = append(roomDetail.TimeSlots, model.TimeSlot{
-				RoomId:    &roomId,
+				RoomId:    roomId,
 				DayOfWeek: timeSlot.DayOfWeek,
 				StartTime: timeSlot.StartTime,
 				EndTime:   timeSlot.EndTime,

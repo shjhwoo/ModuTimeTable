@@ -54,19 +54,19 @@ func GetHost(filter model.Host) ([]model.Host, error) {
 	var whereConditions []string
 	var queryParams []any
 
-	if filter.Id != nil {
+	if filter.Id != 0 {
 		whereConditions = append(whereConditions, "Id = ?")
-		queryParams = append(queryParams, *filter.Id)
+		queryParams = append(queryParams, filter.Id)
 	}
 
-	if filter.KakaoTalkId != nil {
+	if filter.KakaoTalkId != "" {
 		whereConditions = append(whereConditions, "KakaoTalkId = ?")
-		queryParams = append(queryParams, *filter.KakaoTalkId)
+		queryParams = append(queryParams, filter.KakaoTalkId)
 	}
 
-	if filter.PhoneNo != nil {
+	if filter.PhoneNo != "" {
 		whereConditions = append(whereConditions, "PhoneNo = ?")
-		queryParams = append(queryParams, *filter.PhoneNo)
+		queryParams = append(queryParams, filter.PhoneNo)
 	}
 
 	var whereStatement string

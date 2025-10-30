@@ -49,7 +49,7 @@ func DeleteRoomGroup(c *gin.Context) {
 		return
 	}
 
-	rooms, err := repo.GetHostRooms(model.RoomFilter{GroupIdList: []*int64{&id}})
+	rooms, err := repo.GetHostRooms(model.RoomFilter{GroupIdList: []int64{id}})
 	if err != nil {
 		c.JSON(500, gin.H{"error": "failed to get rooms: " + err.Error()})
 		return
@@ -57,7 +57,7 @@ func DeleteRoomGroup(c *gin.Context) {
 
 	for _, room := range rooms {
 
-		roomId := *room.Room.Id
+		roomId := room.Room.Id
 
 		if err := repo.DeleteRoom(roomId); err != nil {
 			c.JSON(500, gin.H{"error": "failed to delete room: " + err.Error()})

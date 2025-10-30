@@ -1,16 +1,16 @@
 package repo
 
 import (
-	"musicRoomBookingbot/config"
-
 	"github.com/jmoiron/sqlx"
+
+	_ "github.com/go-sql-driver/mysql"
 )
 
 var DB *sqlx.DB
 
 func ConnectDataBase(dsn string) error {
 
-	conn, err := sqlx.Connect(config.Env.DB_DRIVER_NAME, dsn)
+	conn, err := sqlx.Connect("mysql", dsn)
 	if err != nil {
 		return err
 	}

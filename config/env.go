@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/joho/godotenv"
 	"github.com/mstoykov/envconfig"
@@ -31,15 +32,21 @@ type EnvVars struct {
 func LoadEnv() {
 	args := os.Args
 
-	var env_file_name string = ".env"
+	var envFileName string = ".env"
 
-	if len(args) > 1 {
-		env_file_name = fmt.Sprintf("%s.env", args[1])
-		log.Println("using env file: ", env_file_name)
+	if len(args) > 1 && !IsTestMode(args[1]) {
+		envFileName = fmt.Sprintf("%s.env", args[1])
+		log.Println("using env file: ", envFileName)
 	}
 
 	wd, _ := os.Getwd()
-	if err := godotenv.Load(filepath.Join(wd, env_file_name)); err != nil {
+
+	parsedDir := strings.Split(wd, "MusicRoomBookingBot")[0]
+	projectDir := filepath.Join(parsedDir, "MusicRoomBookingBot")
+
+	log.Println("envDir:", filepath.Join(projectDir, envFileName))
+
+	if err := godotenv.Load(filepath.Join(projectDir, envFileName)); err != nil {
 		log.Printf("No .env file found")
 		log.Panic(err)
 	}
@@ -49,6 +56,10 @@ func LoadEnv() {
 		log.Panic(err)
 	}
 
-	env.ENVFILENAME = env_file_name
+	env.ENVFILENAME = envFileName
 	Env = env
+}
+
+func IsTestMode(secondArg string) bool {
+	return strings.HasPrefix(secondArg, "-test")
 }

@@ -54,24 +54,24 @@ func GetRoomGroup(filter model.RoomGroup) ([]model.RoomGroup, error) {
 	var whereConditions []string
 	var queryParams []any
 
-	if filter.Id != nil {
+	if filter.Id != 0 {
 		whereConditions = append(whereConditions, "Id = ?")
-		queryParams = append(queryParams, *filter.Id)
+		queryParams = append(queryParams, filter.Id)
 	}
 
-	if filter.HostId != nil {
+	if filter.HostId != 0 {
 		whereConditions = append(whereConditions, "HostId = ?")
-		queryParams = append(queryParams, *filter.HostId)
+		queryParams = append(queryParams, filter.HostId)
 	}
 
-	if filter.GroupName != nil {
+	if filter.GroupName != "" {
 		whereConditions = append(whereConditions, "GroupName LIKE ?")
-		queryParams = append(queryParams, "%"+*filter.GroupName+"%")
+		queryParams = append(queryParams, "%"+filter.GroupName+"%")
 	}
 
-	if filter.Address != nil {
+	if filter.Address != "" {
 		whereConditions = append(whereConditions, "Address LIKE ?")
-		queryParams = append(queryParams, "%"+*filter.Address+"%")
+		queryParams = append(queryParams, "%"+filter.Address+"%")
 	}
 
 	var whereStatement string
