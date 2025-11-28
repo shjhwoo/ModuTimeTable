@@ -181,7 +181,7 @@ func GetHostRooms(filter model.RoomFilter) ([]model.RoomDetail, error) {
 		}
 
 		for _, timeSlot := range timeSlots {
-			roomDetail.TimeSlots = append(roomDetail.TimeSlots, model.TimeSlot{
+			roomDetail.TimeSlots = append(roomDetail.TimeSlots, model.DaySlot{
 				RoomId:    roomId,
 				DayOfWeek: timeSlot.DayOfWeek,
 				StartTime: timeSlot.StartTime,

@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-func InsertTimeSlot(entity model.TimeSlot) (int64, error) {
+func InsertTimeSlot(entity model.DaySlot) (int64, error) {
 	columns, values := GetInsertColumnsAndValues(entity)
 
 	query := fmt.Sprintf(`INSERT INTO %s (%s) VALUES %s`,
@@ -31,7 +31,7 @@ func InsertTimeSlot(entity model.TimeSlot) (int64, error) {
 	return id, nil
 }
 
-func UpdateTimeSlot(entity model.TimeSlot) error {
+func UpdateTimeSlot(entity model.DaySlot) error {
 	columns, values := GetUpdateColumnsAndValues(entity)
 
 	query := fmt.Sprintf(`UPDATE %s SET %s WHERE Id = ?`,
@@ -153,7 +153,7 @@ func GetTimeSlotExceptionsByRoomId(roomId int64, startDate, endDate string) (mod
 	return timeSlotExceptionMap, nil
 }
 
-func GetBasicTimeSlotsByRoom(roomId int64) (map[int][]model.TimeSlotsDetail, error) {
+func GetTimeSlotStatusByRoom(roomId int64) (map[int][]model.TimeSlotsDetail, error) {
 	query := fmt.Sprintf(`SELECT ds.*
 	FROM %s AS ds
 	LEFT JOIN %s AS r ON ds.RoomId = r.Id
@@ -162,13 +162,13 @@ func GetBasicTimeSlotsByRoom(roomId int64) (map[int][]model.TimeSlotsDetail, err
 	AND r.Discard = 0
 	ORDER BY ds.DayOfWeek, ds.StartTime;`, DaySlot, Room)
 
-	var timeSlots []model.TimeSlot
+	var timeSlots []model.DaySlot
 	err := DB.Select(&timeSlots, query, roomId)
 	if err != nil {
 		return nil, util.WrapWithStack(err)
 	}
 
-	var timeSlotMap = make(map[int][]model.TimeSlot)
+	var timeSlotMap = make(map[int][]model.DaySlot)
 	for _, slot := range timeSlots {
 		timeSlotMap[slot.DayOfWeek] = append(timeSlotMap[slot.DayOfWeek], slot)
 	}
@@ -206,8 +206,10 @@ func GetBasicTimeSlotsByRoom(roomId int64) (map[int][]model.TimeSlotsDetail, err
 			}
 
 			log.Println("슬롯 시작 시각: ", basicSlot.StartTimeParsed, "슬롯 종료 시각: ", basicSlot.EndTimeParsed, "해당 구간 예약 시간 단위(분): ", basicSlot.ReservationUnitMinutes)
-			if slotStartTime.After(basicSlot.EndTimeParsed) {
-				log.Println("현재 시각이 슬롯 종료 시각 이후이기 때문에 다음으로 넘어간다")
+
+			if basicSlot.Closed == 1 ||
+				slotStartTime.After(basicSlot.EndTimeParsed) {
+				log.Println("해당 구간이 예약 불가 시간대이거나, 현재 시각이 슬롯 종료 시각 이후이기 때문에 다음으로 넘어간다")
 				continue
 			}
 
@@ -247,7 +249,7 @@ func GetBasicTimeSlotsByRoom(roomId int64) (map[int][]model.TimeSlotsDetail, err
 	// 	result[dayOfWeek] = append(result[dayOfWeek], slotGroup)
 	// }
 
-	return result, nil
+	return nil, nil
 }
 
 func GetRoom(roomId int64) (*model.Room, error) {

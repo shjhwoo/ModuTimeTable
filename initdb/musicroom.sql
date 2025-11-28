@@ -25,9 +25,10 @@ CREATE TABLE IF NOT EXISTS `DaySlot` (
   `StartTime` varchar(4) NOT NULL DEFAULT '',
   `EndTime` varchar(4) NOT NULL DEFAULT '',
   `ReservationUnitMinutes` tinyint unsigned NOT NULL DEFAULT '0',
+  `Closed` tinyint(1) unsigned zerofill NOT NULL DEFAULT '0',
   `Discard` tinyint(1) unsigned zerofill NOT NULL DEFAULT '0',
   PRIMARY KEY (`Id`),
-  KEY `열 2` (`RoomId`),
+  KEY `RoomId` (`RoomId`),
   KEY `DayOfWeek` (`DayOfWeek`),
   KEY `StartTime` (`StartTime`),
   KEY `EndTime` (`EndTime`)
@@ -36,14 +37,15 @@ CREATE TABLE IF NOT EXISTS `DaySlot` (
 -- 테이블 데이터 MusicRoom.DaySlot:~0 rows (대략적) 내보내기
 DELETE FROM `DaySlot`;
 /*!40000 ALTER TABLE `DaySlot` DISABLE KEYS */;
-INSERT INTO `DaySlot` (`Id`, `RoomId`, `DayOfWeek`, `StartTime`, `EndTime`, `Discard`) VALUES
-	(1, 1, 0, '0900', '2400', 0),
-	(2, 1, 1, '0900', '2400', 0),
-	(3, 1, 2, '0900', '2400', 0),
-	(4, 1, 3, '0900', '2400', 0),
-	(5, 1, 4, '0900', '2400', 0),
-	(6, 1, 5, '0900', '2400', 0),
-	(7, 1, 6, '0900', '2400', 0);
+INSERT INTO `DaySlot` (`Id`, `RoomId`, `DayOfWeek`, `StartTime`, `EndTime`, `ReservationUnitMinutes`, `Closed`, `Discard`) VALUES
+	(1, 1, 0, '0000', '0000', 0, 1, 0),
+	(2, 1, 1, '0900', '1200', 60, 0, 0),
+	(3, 1, 1, '1200', '2000', 30, 0, 0),
+	(4, 1, 2, '0900', '2359', 60, 0, 0),
+	(5, 1, 3, '0900', '2359', 60, 0, 0),
+	(6, 1, 4, '0900', '2359', 60, 0, 0),
+	(7, 1, 5, '0900', '2359', 60, 0, 0),
+	(8, 1, 6, '0900', '2359', 60, 0, 0);
 /*!40000 ALTER TABLE `DaySlot` ENABLE KEYS */;
 
 -- 테이블 MusicRoom.DaySlotException 구조 내보내기
@@ -136,8 +138,8 @@ CREATE TABLE IF NOT EXISTS `Room` (
 -- 테이블 데이터 MusicRoom.Room:~0 rows (대략적) 내보내기
 DELETE FROM `Room`;
 /*!40000 ALTER TABLE `Room` DISABLE KEYS */;
-INSERT INTO `Room` (`Id`, `GroupId`, `RoomName`, `ReservableDaysMinOffset`, `ReservableDaysMaxOffset`, `ReservationUnitMinutes`, `Discard`) VALUES
-	(1, 1, '18번드럼방', 0, 14, 60, 0);
+INSERT INTO `Room` (`Id`, `GroupId`, `RoomName`, `ReservableDaysMinOffset`, `ReservableDaysMaxOffset`,  `Discard`) VALUES
+	(1, 1, '18번드럼방', 0, 14, 0);
 /*!40000 ALTER TABLE `Room` ENABLE KEYS */;
 
 -- 테이블 MusicRoom.RoomGroup 구조 내보내기

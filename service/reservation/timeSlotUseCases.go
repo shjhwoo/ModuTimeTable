@@ -49,7 +49,7 @@ func GetAvailableTimeSlotsByRoom(c *gin.Context) {
 	roomIdInt64 := util.ParseInt64(roomId)
 
 	//basicTimeSlotListMap
-	_, err := repo.GetBasicTimeSlotsByRoom(roomIdInt64)
+	_, err := repo.GetTimeSlotStatusByRoom(roomIdInt64)
 	if err != nil {
 		c.JSON(500, gin.H{"error": err.Error()})
 		return

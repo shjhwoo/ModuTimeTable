@@ -41,7 +41,7 @@ type RoomGroup struct {
 type RoomDetail struct {
 	Room               Room                `json:"room"`
 	TimeSlotExceptions []TimeSlotException `json:"timeSlotExceptions"`
-	TimeSlots          []TimeSlot          `json:"timeSlots"`
+	TimeSlots          []DaySlot           `json:"timeSlots"`
 }
 
 type Room struct {
@@ -125,7 +125,7 @@ type TimeSlotsDetail struct {
 	Discard                 int                `form:"discard" json:"discard" db:"Discard"`
 }
 
-type TimeSlot struct {
+type DaySlot struct {
 	Id                     int64  `form:"id" json:"id" db:"Id"`
 	RoomId                 int64  `form:"roomId" json:"roomId" db:"RoomId"`
 	DayOfWeek              int    `form:"dayOfWeek" json:"dayOfWeek" db:"DayOfWeek"`
@@ -134,14 +134,15 @@ type TimeSlot struct {
 	EndTime                string `form:"endTime" json:"endTime" db:"EndTime"`
 	EndTimeParsed          time.Time
 	ReservationUnitMinutes int `form:"reservationUnitMinutes" json:"reservationUnitMinutes" db:"ReservationUnitMinutes"`
+	Closed                 int `form:"closed" json:"closed" db:"Closed"`
 	Discard                int `form:"discard" json:"discard" db:"Discard"`
 }
 
-func (ts *TimeSlot) ParseStartAndEndTime(yyyymmdd string) error {
+func (ts *DaySlot) ParseStartAndEndTime(yyyymmdd string) error {
 	startStr := fmt.Sprintf("%s%s", yyyymmdd, ts.StartTime)
 	start, err := time.ParseInLocation(util.YYYYMMDDhhmm, startStr, util.KST)
 	if err != nil {
-		return err
+		return util.WrapWithStack(err)
 	}
 
 	ts.StartTimeParsed = start
@@ -149,7 +150,7 @@ func (ts *TimeSlot) ParseStartAndEndTime(yyyymmdd string) error {
 	endStr := fmt.Sprintf("%s%s", yyyymmdd, ts.EndTime)
 	end, err := time.ParseInLocation(util.YYYYMMDDhhmm, endStr, util.KST)
 	if err != nil {
-		return err
+		return util.WrapWithStack(err)
 	}
 	ts.EndTimeParsed = end
 
